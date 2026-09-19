@@ -14,11 +14,11 @@ class PirateAudio(BaseComponent):
         # Board (Scale: ~4x, 65mm x 30mm -> 260x120 pHAT)
         self.w, self.h = 260, 120
         self._rect(0, 0, self.w, self.h, fill="#1c3b57", outline="#ffffff", width=2)
-        self._text(130, 15, text="Pirate Audio (pHAT)", fill="white", font=("Segoe UI", 9, "bold"))
+        self._text(130, 10, text="Pirate Audio (pHAT)", fill="white", font=("Segoe UI", 7, "bold"))
         
         # Screen (1.3" IPS -> ~90x90 square in the center)
         self.screen_rect = self._rect(85, 20, 90, 90, fill="black", outline="#444", width=4)
-        self.screen_text = self._text(130, 65, text="Off", fill="white", font=("Segoe UI", 12))
+        self.screen_text = self._text(130, 65, text="Off", fill="white", font=("Segoe UI", 8), width=85)
 
         # Buttons (A, B on Left. X, Y on Right of screen)
         self._add_btn(10, 20, "A")
