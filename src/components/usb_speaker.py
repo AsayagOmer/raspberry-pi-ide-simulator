@@ -44,8 +44,7 @@ class USBSpeaker(BaseComponent):
             self.plug_y = event.y
             if self.connected_to is not None:
                 self.connected_to = None
-                with open("hardware.log", "a") as f: f.write("USB Speaker is disconnected\n")
-                self.app.log_console("USB Speaker is disconnected")
+                with open("hardware.log", "a") as f: f.write("USB Speaker is disconnected from USB 2.0 Port\n")
         else:
             # Dragging Speaker Body
             super().on_drag_motion(event)
@@ -64,7 +63,6 @@ class USBSpeaker(BaseComponent):
                         self.plug_x += dx; self.plug_y += dy
                         if self.connected_to != comp:
                             self.connected_to = comp
-                            with open("hardware.log", "a") as f: f.write("USB Speaker is connected\n")
-                            self.app.log_console("USB Speaker is connected")
+                            with open("hardware.log", "a") as f: f.write("USB Speaker is connected to USB 2.0 Port\n")
                         break
             self.update_cable()
