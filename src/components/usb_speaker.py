@@ -13,24 +13,27 @@ class USBSpeaker(BaseComponent):
         self.setup_draggable(specific_tag=self.plug_tag) # Make plug draggable separately
 
     def draw(self):
+        self.w, self.h = 120, 150
         # Speaker Body
-        self.items.append(self.canvas.create_rectangle(self.x, self.y, self.x+120, self.y+150, fill="#333", outline="#555", width=2, tags=self.tag))
-        self.items.append(self.canvas.create_oval(self.x+20, self.y+40, self.x+100, self.y+120, fill="#111", tags=self.tag))
-        self.items.append(self.canvas.create_text(self.x+60, self.y+15, text="USB Speaker", fill="white", font=("Segoe UI", 9, "bold"), tags=self.tag))
+        self._rect(0, 0, self.w, self.h, fill="#333", outline="#555", width=2)
+        self._oval(20, 40, 80, 80, fill="#111")
+        self._text(60, 15, text="USB Speaker", fill="white", font=("Segoe UI", 9, "bold"))
         
-        self.status_text = self.canvas.create_text(self.x+60, self.y+135, text="Disconnected", fill="red", font=("Segoe UI", 8, "bold"), tags=self.tag)
-        self.items.append(self.status_text)
+        self.status_text = self._text(60, 135, text="Disconnected", fill="red", font=("Segoe UI", 8, "bold"))
         
         # USB Cable & Plug
-        self.plug_x, self.plug_y = self.x - 100, self.y + 75
-        self.cable_id = self.canvas.create_line(self.x, self.y+75, self.plug_x, self.plug_y, fill="#00bfff", width=4, smooth=True)
+        cx, cy = self._rot_pt(0, 75)
+        self.plug_x, self.plug_y = self.x + cx - 100, self.y + cy
+        self.cable_id = self.canvas.create_line(self.x+cx, self.y+cy, self.plug_x, self.plug_y, fill="#00bfff", width=4, smooth=True, tags=self.tag)
         self.items.append(self.cable_id)
         
+        # Plug rect drawn statically (doesn't rotate with speaker since it's loose)
         self.plug_rect = self.canvas.create_rectangle(self.plug_x-10, self.plug_y-15, self.plug_x+10, self.plug_y+15, fill="#00bfff", tags=self.plug_tag)
         self.items.append(self.plug_rect)
 
     def update_cable(self):
-        self.canvas.coords(self.cable_id, self.x, self.y+75, self.x-50, self.plug_y+50, self.plug_x, self.plug_y)
+        cx, cy = self._rot_pt(0, 75)
+        self.canvas.coords(self.cable_id, self.x+cx, self.y+cy, self.x+cx-50, self.plug_y+50, self.plug_x, self.plug_y)
 
     def on_drag_motion(self, event):
         item = self.canvas.find_withtag("current")
