@@ -19,8 +19,6 @@ class USBSpeaker(BaseComponent):
         self._oval(20, 40, 80, 80, fill="#111")
         self._text(60, 15, text="USB Speaker", fill="white", font=("Segoe UI", 9, "bold"))
         
-        self.status_text = self._text(60, 135, text="Disconnected", fill="red", font=("Segoe UI", 8, "bold"))
-        
         # USB Cable & Plug
         cx, cy = self._rot_pt(0, 75)
         self.plug_x, self.plug_y = self.x + cx - 100, self.y + cy
@@ -44,8 +42,10 @@ class USBSpeaker(BaseComponent):
             self.canvas.move(self.plug_tag, dx, dy)
             self.plug_x = event.x
             self.plug_y = event.y
-            self.connected_to = None
-            self.canvas.itemconfig(self.status_text, text="Disconnected", fill="red")
+            if self.connected_to is not None:
+                self.connected_to = None
+                with open("hardware.log", "a") as f: f.write("USB Speaker is disconnected\n")
+                self.app.log_console("USB Speaker is disconnected")
         else:
             # Dragging Speaker Body
             super().on_drag_motion(event)
@@ -62,7 +62,9 @@ class USBSpeaker(BaseComponent):
                         dy = comp.usb2_y - self.plug_y
                         self.canvas.move(self.plug_tag, dx, dy)
                         self.plug_x += dx; self.plug_y += dy
-                        self.connected_to = comp
-                        self.canvas.itemconfig(self.status_text, text="Connected", fill="#888")
+                        if self.connected_to != comp:
+                            self.connected_to = comp
+                            with open("hardware.log", "a") as f: f.write("USB Speaker is connected\n")
+                            self.app.log_console("USB Speaker is connected")
                         break
             self.update_cable()

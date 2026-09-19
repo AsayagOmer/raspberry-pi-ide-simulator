@@ -51,7 +51,10 @@ class PirateAudio(BaseComponent):
     def on_drag_motion(self, event):
         super().on_drag_motion(event)
         self.update_ports()
-        self.connected_to = None
+        if self.connected_to is not None:
+            self.connected_to = None
+            with open("hardware.log", "a") as f: f.write("Pirate Audio is disconnected\n")
+            self.app.log_console("Pirate Audio is disconnected")
 
     def on_drag_stop(self, event):
         # Snap to RPi GPIO
@@ -63,5 +66,8 @@ class PirateAudio(BaseComponent):
                     self.canvas.move(self.tag, dx, dy)
                     self.x += dx; self.y += dy
                     self.socket_x += dx; self.socket_y += dy
-                    self.connected_to = comp
+                    if self.connected_to != comp:
+                        self.connected_to = comp
+                        with open("hardware.log", "a") as f: f.write("Pirate Audio is connected\n")
+                        self.app.log_console("Pirate Audio is connected")
                     break

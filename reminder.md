@@ -19,6 +19,10 @@ How the GUI is. It follows these notes:
   * Pirate Audio: Dual Mic for Raspberry Pi [Pirate Audio: Dual Mic for Raspberry Pi - פייטל](https://piitel.co.il/shop/pirate-audio-dual-mic-for-raspberry-pi/)
   * Mini USB 2.0 external speaker [רמקולי USB מיני - פייטל](https://piitel.co.il/shop/mini-usb-speakers/)
 
+### Logs
+
+* Any device that connected or disconnected, will write to the log file (the format: <device_name> is connected/disconnected); Only in the log file, we're informed connected/disconnected.
+
 ### Notes
 
 * Push to GitHub after any significant change.

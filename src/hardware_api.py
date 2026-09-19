@@ -45,10 +45,8 @@ class HardwareAPI:
         if os.path.exists(filepath):
             pygame.mixer.music.load(filepath)
             pygame.mixer.music.play()
-            self.app.after(0, lambda: self.app.canvas.itemconfig(spk.status_text, text="Playing", fill="#4CAF50"))
             self.app.after(0, lambda p=filepath: self.app.log_console(f"Playing audio: {p}"))
             while pygame.mixer.music.get_busy(): time.sleep(0.1)
-            self.app.after(0, lambda: self.app.canvas.itemconfig(spk.status_text, text="Connected", fill="#888"))
             return True
         else:
             self.app.after(0, lambda p=filepath: self.app.log_console(f"ERROR: Audio file '{p}' not found."))

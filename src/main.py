@@ -201,9 +201,6 @@ else:
 
     def stop_audio(self):
         pygame.mixer.music.stop()
-        for comp in self.components:
-            if isinstance(comp, USBSpeaker) and comp.connected_to:
-                self.canvas.itemconfig(comp.status_text, text="Connected", fill="#888")
         self.log_console("Audio stopped.")
 
     def run_code(self):
