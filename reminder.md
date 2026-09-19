@@ -25,4 +25,4 @@ How the GUI is. It follows these notes:
 
 ---
 
-Please inform me that you read it, say: "Omer, I read the remainder as requested".
+Please inform me that you read it, say: "Omer, I read the reminder as requested".

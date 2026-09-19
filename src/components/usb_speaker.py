@@ -57,9 +57,9 @@ class USBSpeaker(BaseComponent):
             # Snap plug to RPi USB
             for comp in self.app.components:
                 if isinstance(comp, RaspberryPi):
-                    if math.hypot(self.plug_x - comp.usb_x, self.plug_y - comp.usb_y) < 40:
-                        dx = comp.usb_x - self.plug_x
-                        dy = comp.usb_y - self.plug_y
+                    if math.hypot(self.plug_x - comp.usb2_x, self.plug_y - comp.usb2_y) < 40:
+                        dx = comp.usb2_x - self.plug_x
+                        dy = comp.usb2_y - self.plug_y
                         self.canvas.move(self.plug_tag, dx, dy)
                         self.plug_x += dx; self.plug_y += dy
                         self.connected_to = comp

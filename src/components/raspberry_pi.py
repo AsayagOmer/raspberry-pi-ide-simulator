@@ -49,8 +49,10 @@ class RaspberryPi(BaseComponent):
     def update_ports(self):
         gx, gy = self._rot_pt(200, 10)
         self.gpio_x, self.gpio_y = self.x + gx, self.y + gy
-        ux, uy = self._rot_pt(360, 120)
-        self.usb_x, self.usb_y = self.x + ux, self.y + uy
+        u3x, u3y = self._rot_pt(360, 125)
+        self.usb3_x, self.usb3_y = self.x + u3x, self.y + u3y
+        u2x, u2y = self._rot_pt(360, 185)
+        self.usb2_x, self.usb2_y = self.x + u2x, self.y + u2y
 
     def on_drag_motion(self, event):
         super().on_drag_motion(event)
