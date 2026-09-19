@@ -16,8 +16,8 @@ class USBSpeaker(BaseComponent):
         self.w, self.h = 120, 150
         # Speaker Body
         self._rect(0, 0, self.w, self.h, fill="#333", outline="#555", width=2)
-        self._oval(20, 40, 80, 80, fill="#111")
-        self._text(60, 15, text="USB Speaker", fill="white", font=("Segoe UI", 9, "bold"))
+        self._oval(20, 45, 80, 80, fill="#111")
+        self._text(60, 20, text="Mini USB 2.0 external speaker", fill="white", font=("Segoe UI", 7, "bold"), width=110, justify="center")
         
         # USB Cable & Plug
         cx, cy = self._rot_pt(0, 75)
@@ -44,7 +44,7 @@ class USBSpeaker(BaseComponent):
             self.plug_y = event.y
             if self.connected_to is not None:
                 self.connected_to = None
-                with open("hardware.log", "a") as f: f.write("USB Speaker is disconnected from USB 2.0 Port\n")
+                with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
         else:
             # Dragging Speaker Body
             super().on_drag_motion(event)
@@ -63,6 +63,6 @@ class USBSpeaker(BaseComponent):
                         self.plug_x += dx; self.plug_y += dy
                         if self.connected_to != comp:
                             self.connected_to = comp
-                            with open("hardware.log", "a") as f: f.write("USB Speaker is connected to USB 2.0 Port\n")
+                            with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is connected to USB 2.0 Port\n")
                         break
             self.update_cable()

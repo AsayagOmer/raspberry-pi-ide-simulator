@@ -77,14 +77,14 @@ class IDEApp(tk.Tk):
         btn_rpi.pack(fill=tk.X, padx=20, pady=5)
         btn_pa = tk.Button(self.comp_tab, text="Add Pirate Audio (Mic)", font=("Segoe UI", 11), bg="#1c3b57", fg="white", command=lambda: self.add_component("Pirate Audio"))
         btn_pa.pack(fill=tk.X, padx=20, pady=5)
-        btn_spk = tk.Button(self.comp_tab, text="Add USB Speaker (Playback only)", font=("Segoe UI", 11), bg="#333333", fg="white", command=lambda: self.add_component("USB Speaker"))
+        btn_spk = tk.Button(self.comp_tab, text="Add Mini USB 2.0 external speaker", font=("Segoe UI", 11), bg="#333333", fg="white", command=lambda: self.add_component("Mini USB 2.0 external speaker"))
         btn_spk.pack(fill=tk.X, padx=20, pady=5)
 
     def add_component(self, comp_type):
         offset = len(self.components) * 20
         if comp_type == "Raspberry Pi": c = RaspberryPi(self.canvas, 50 + offset, 150 + offset)
         elif comp_type == "Pirate Audio": c = PirateAudio(self.canvas, 50 + offset, 20 + offset, self)
-        elif comp_type == "USB Speaker": c = USBSpeaker(self.canvas, 250 + offset, 20 + offset, self)
+        elif comp_type == "Mini USB 2.0 external speaker": c = USBSpeaker(self.canvas, 250 + offset, 20 + offset, self)
         self.components.append(c)
         self.log_event(f"Component added to workspace: {comp_type}")
 
