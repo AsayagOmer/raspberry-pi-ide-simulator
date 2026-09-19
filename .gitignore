@@ -1,0 +1,8 @@
+# Python environment
+.venv/
+__pycache__/
+*.pyc
+
+# Personal remainder
+remainder.md
+remainder.txt
