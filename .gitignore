@@ -3,6 +3,11 @@
 __pycache__/
 *.pyc
 
-# Personal remainder
+# Personal reminder
+reminder.md
 remainder.md
 remainder.txt
+
+# Generated logs and media
+*.log
+*.wav

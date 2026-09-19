@@ -21,11 +21,13 @@ How the GUI is. It follows these notes:
 
 ### Logs
 
-* Any device that connected or disconnected, will write to the log file (the format: <device_name> is connected/disconnected); Only in the log file, we're informed connected/disconnected.
+* Any device that connected or disconnected, will write to the hardware log file (the format: <device_name> is connected/disconnected); Only in the log file, we're informed connected/disconnected.
+* Any major event in the UI and major logic event should be written to event log file.
 
 ### Notes
 
 * Push to GitHub after any significant change.
+* Make sure the gitignore file is up to the date, including only necessary file to run.
 
 ---
 

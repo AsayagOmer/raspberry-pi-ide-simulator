@@ -24,6 +24,13 @@ class IDEApp(tk.Tk):
 
         self.setup_styles()
         self.setup_ui()
+        self.log_event("IDE started with a clear board.")
+
+    def log_event(self, text):
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open("event.log", "a") as f:
+            f.write(f"[{timestamp}] {text}\n")
 
     def setup_styles(self):
         style = ttk.Style()
@@ -79,6 +86,7 @@ class IDEApp(tk.Tk):
         elif comp_type == "Pirate Audio": c = PirateAudio(self.canvas, 50 + offset, 20 + offset, self)
         elif comp_type == "USB Speaker": c = USBSpeaker(self.canvas, 250 + offset, 20 + offset, self)
         self.components.append(c)
+        self.log_event(f"Component added to workspace: {comp_type}")
 
     def setup_code_tab(self):
         toolbar = tk.Frame(self.code_tab, bg="#3c3f41")
@@ -180,6 +188,7 @@ else:
                 editor.insert(tk.END, content)
                 self.highlight_syntax(editor)
             self.current_file = filepath
+            self.log_event(f"Opened file: {filepath}")
 
     def save_file(self):
         current_tab_id = self.file_notebook.select()
@@ -187,30 +196,36 @@ else:
         editor = self.editors[current_tab_id]
         if self.current_file:
             with open(self.current_file, "w") as f: f.write(editor.get("1.0", tk.END))
+            self.log_event(f"Saved file: {self.current_file}")
         else:
             filepath = filedialog.asksaveasfilename(defaultextension=".py")
             if filepath:
                 self.current_file = filepath
                 with open(self.current_file, "w") as f: f.write(editor.get("1.0", tk.END))
+                self.log_event(f"Saved file: {self.current_file}")
 
     def log_console(self, text):
         self.console.config(state=tk.NORMAL)
-        self.console.insert(tk.END, text + "\\n")
+        self.console.insert(tk.END, text + "\n")
         self.console.see(tk.END)
         self.console.config(state=tk.DISABLED)
 
     def stop_audio(self):
         pygame.mixer.music.stop()
         self.log_console("Audio stopped.")
+        self.log_event("Audio playback stopped manually.")
 
     def run_code(self):
         current_tab_id = self.file_notebook.select()
         if not current_tab_id: return
         code = self.editors[current_tab_id].get("1.0", tk.END)
+        tab_name = self.file_notebook.tab(current_tab_id, 'text')
+        
         self.console.config(state=tk.NORMAL)
         self.console.delete("1.0", tk.END)
         self.console.config(state=tk.DISABLED)
-        self.log_console(f"--- Running {self.file_notebook.tab(current_tab_id, 'text')} ---")
+        self.log_console(f"--- Running {tab_name} ---")
+        self.log_event(f"Started executing code: {tab_name}")
 
         api = HardwareAPI(self)
         
@@ -223,10 +238,12 @@ else:
                     exec(code, {}, {'hardware': api, 'time': __import__('time')})
             except Exception as e:
                 self.after(0, lambda err=e: self.log_console(f"Error: {err}"))
+                self.after(0, lambda err=e: self.log_event(f"Code execution error: {err}"))
             finally:
                 output = redirected_output.getvalue()
                 if output: self.after(0, lambda out=output: self.log_console(out.strip()))
                 self.after(0, lambda: self.log_console("--- Execution Finished ---"))
+                self.after(0, lambda: self.log_event("Code execution finished."))
                 
         threading.Thread(target=execute, daemon=True).start()
 
