@@ -149,12 +149,12 @@ class IDEApp(tk.Tk):
         btn_save = tk.Button(self.toolbar, text="💾 Save", bg="#555", fg="white", command=self.save_file, relief=tk.FLAT)
         btn_save.pack(side=tk.LEFT, padx=5, pady=2)
 
-        self.paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
-        self.paned.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.paned = tk.PanedWindow(self, orient=tk.HORIZONTAL, sashwidth=6, sashrelief=tk.RAISED, bg="#3c3f41")
+        self.paned.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
         # Left Canvas
         self.left_frame = tk.Frame(self.paned, bg="#3c3f41", bd=2, relief=tk.SUNKEN)
-        self.paned.add(self.left_frame, weight=1)
+        self.paned.add(self.left_frame, stretch="always")
         tk.Label(self.left_frame, text="Hardware Workspace", font=("Segoe UI", 14, "bold"), bg="#3c3f41", fg="white").pack(pady=5)
         
         # Upper Hardware Toolbar (Undo/Redo)
@@ -175,7 +175,7 @@ class IDEApp(tk.Tk):
 
         # Right Notebook
         self.right_notebook = ttk.Notebook(self.paned)
-        self.paned.add(self.right_notebook, weight=1)
+        self.paned.add(self.right_notebook, stretch="always")
 
         self.code_tab = ttk.Frame(self.right_notebook)
         self.right_notebook.add(self.code_tab, text="💻 Code Editor")
