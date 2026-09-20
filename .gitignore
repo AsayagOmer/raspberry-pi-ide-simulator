@@ -5,8 +5,6 @@ __pycache__/
 
 # Personal reminder
 reminder.md
-remainder.md
-remainder.txt
 
 # Generated logs and media
 *.log

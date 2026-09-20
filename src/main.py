@@ -57,8 +57,18 @@ class IDEApp(tk.Tk):
         tk.Label(self.left_frame, text="Hardware Workspace", font=("Segoe UI", 14, "bold"), bg="#3c3f41", fg="white").pack(pady=5)
         self.canvas = tk.Canvas(self.left_frame, bg="#2b2b2b", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.canvas.bind("<Button-1>", lambda e: self.canvas.focus_set())
+        self.canvas.bind("<Delete>", self.on_delete_component)
 
-        # Right Notebook
+    def on_delete_component(self, event):
+        items = self.canvas.find_withtag("current")
+        if not items: return
+        for comp in self.components:
+            if items[0] in comp.items:
+                comp.delete()
+                break
+
+    # Right Notebook
         self.right_notebook = ttk.Notebook(self.paned)
         self.paned.add(self.right_notebook, weight=1)
 

@@ -13,7 +13,8 @@ How the GUI is. It follows these notes:
 
 * Do not change the components, unless I say to change a specific component.
 * Make sure that the components are fully Aligned with their physical technical structure (ports, connections, shape, buttons, etc.)
-* Each component need to be possible to rotate
+* Each component need to be possible to rotate.
+* Each component need to be erasable (by pressing delete while the user cursor on the component).
 * Supported components:
   * Raspberry Pi 4 MODEL B
   * Pirate Audio: Dual Mic for Raspberry Pi [Pirate Audio: Dual Mic for Raspberry Pi - פייטל](https://piitel.co.il/shop/pirate-audio-dual-mic-for-raspberry-pi/)

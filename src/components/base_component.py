@@ -79,6 +79,7 @@ class BaseComponent:
         return item
 
     def on_drag_start(self, event):
+        self.canvas.focus_set()
         self.drag_x = event.x
         self.drag_y = event.y
         for item in self.items:
@@ -95,3 +96,14 @@ class BaseComponent:
 
     def on_drag_stop(self, event):
         pass
+
+    def on_right_click(self, event):
+        self.rotation = (self.rotation + 90) % 360
+        self.redraw()
+
+    def delete(self):
+        for item in self.items:
+            self.canvas.delete(item)
+        if self in self.app.components:
+            self.app.components.remove(self)
+        self.app.log_event(f"Component deleted: {self.__class__.__name__}")
