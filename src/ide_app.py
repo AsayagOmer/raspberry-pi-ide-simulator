@@ -171,7 +171,7 @@ class IDEApp(tk.Tk):
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.canvas.bind("<Configure>", self._draw_graph_paper)
         self.canvas.bind("<ButtonPress-1>", lambda e: self.canvas.focus_set())
-        self.canvas.bind("<Motion>", lambda e: self.coord_label.config(text=f"X: {e.x}, Y: {e.y}"))
+        self.canvas.bind("<Motion>", self._update_coords)
 
         # Right Notebook
         self.right_notebook = ttk.Notebook(self.paned)
@@ -205,18 +205,37 @@ class IDEApp(tk.Tk):
         self.bind("<Control-Shift-Z>", self.hw_redo)
         self.bind("<Control-Shift-z>", self.hw_redo)
 
+    def _update_coords(self, event):
+        cx = self.canvas.winfo_width() // 2
+        cy = self.canvas.winfo_height() // 2
+        # Center is (0, 0). Standard screen space translates X and Y.
+        rel_x = event.x - cx
+        rel_y = event.y - cy
+        self.coord_label.config(text=f"X: {rel_x}, Y: {rel_y}")
+
     def _draw_graph_paper(self, event=None):
         self.canvas.delete("grid_line")
         w = self.canvas.winfo_width()
         h = self.canvas.winfo_height()
-        for x in range(0, w, 20):
+        cx = w // 2
+        cy = h // 2
+        
+        # Minor grid lines aligned to center
+        for x in range(cx % 20, w, 20):
             self.canvas.create_line(x, 0, x, h, fill="#d6d6d6", width=1, tags="grid_line")
-        for y in range(0, h, 20):
+        for y in range(cy % 20, h, 20):
             self.canvas.create_line(0, y, w, y, fill="#d6d6d6", width=1, tags="grid_line")
-        for x in range(0, w, 100):
+            
+        # Major grid lines aligned to center
+        for x in range(cx % 100, w, 100):
             self.canvas.create_line(x, 0, x, h, fill="#c0c0c0", width=1, tags="grid_line")
-        for y in range(0, h, 100):
+        for y in range(cy % 100, h, 100):
             self.canvas.create_line(0, y, w, y, fill="#c0c0c0", width=1, tags="grid_line")
+            
+        # Origin axes (darker center lines)
+        self.canvas.create_line(cx, 0, cx, h, fill="#888888", width=2, tags="grid_line")
+        self.canvas.create_line(0, cy, w, cy, fill="#888888", width=2, tags="grid_line")
+        
         self.canvas.tag_lower("grid_line")
 
     def delete_hovered_component(self, event=None):
@@ -246,12 +265,15 @@ class IDEApp(tk.Tk):
         offset = len(self.components) * 20
         cls = COMPONENT_REGISTRY[name]["class"]
         
+        cx = self.canvas.winfo_width() // 2
+        cy = self.canvas.winfo_height() // 2
+        
         if "Raspberry" in name:
-            c = cls(self.canvas, 50 + offset, 150 + offset)
+            c = cls(self.canvas, cx - 200 + offset, cy - 100 + offset)
         elif "Pirate" in name:
-            c = cls(self.canvas, 50 + offset, 20 + offset)
+            c = cls(self.canvas, cx - 200 + offset, cy - 250 + offset)
         else:
-            c = cls(self.canvas, 250 + offset, 20 + offset)
+            c = cls(self.canvas, cx + 50 + offset, cy - 250 + offset)
             
         self.components.append(c)
         self.log_event(f"Component added to workspace: {name}")
