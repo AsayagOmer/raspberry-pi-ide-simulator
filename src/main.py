@@ -4,9 +4,7 @@ import pygame
 import threading
 import re
 
-from components.raspberry_pi import RaspberryPi
-from components.pirate_audio import PirateAudio
-from components.usb_speaker import USBSpeaker
+from components import COMPONENT_REGISTRY
 from hardware_api import HardwareAPI
 
 class IDEApp(tk.Tk):
@@ -85,20 +83,33 @@ class IDEApp(tk.Tk):
     def setup_components_tab(self):
         lbl = tk.Label(self.comp_tab, text="Click to add components to workspace:", font=("Segoe UI", 12), bg="#2b2b2b", fg="white")
         lbl.pack(pady=10)
-        btn_rpi = tk.Button(self.comp_tab, text="Add Raspberry Pi 4", font=("Segoe UI", 11), bg="#006400", fg="white", command=lambda: self.add_component("Raspberry Pi"))
-        btn_rpi.pack(fill=tk.X, padx=20, pady=5)
-        btn_pa = tk.Button(self.comp_tab, text="Add Pirate Audio (Mic)", font=("Segoe UI", 11), bg="#1c3b57", fg="white", command=lambda: self.add_component("Pirate Audio"))
-        btn_pa.pack(fill=tk.X, padx=20, pady=5)
-        btn_spk = tk.Button(self.comp_tab, text="Add Mini USB 2.0 external speaker", font=("Segoe UI", 11), bg="#333333", fg="white", command=lambda: self.add_component("Mini USB 2.0 external speaker"))
-        btn_spk.pack(fill=tk.X, padx=20, pady=5)
+        
+        for name, data in COMPONENT_REGISTRY.items():
+            btn = tk.Button(
+                self.comp_tab, 
+                text=f"Add {name}", 
+                font=("Segoe UI", 11), 
+                bg=data["color"], 
+                fg="white", 
+                command=lambda n=name: self.add_component(n)
+            )
+            btn.pack(fill=tk.X, padx=20, pady=5)
 
-    def add_component(self, comp_type):
+    def add_component(self, name):
+        if name not in COMPONENT_REGISTRY: return
         offset = len(self.components) * 20
-        if comp_type == "Raspberry Pi": c = RaspberryPi(self.canvas, 50 + offset, 150 + offset)
-        elif comp_type == "Pirate Audio": c = PirateAudio(self.canvas, 50 + offset, 20 + offset, self)
-        elif comp_type == "Mini USB 2.0 external speaker": c = USBSpeaker(self.canvas, 250 + offset, 20 + offset, self)
+        cls = COMPONENT_REGISTRY[name]["class"]
+        
+        # Default layout positions based on type
+        if "Raspberry" in name:
+            c = cls(self.canvas, 50 + offset, 150 + offset)
+        elif "Pirate" in name:
+            c = cls(self.canvas, 50 + offset, 20 + offset)
+        else:
+            c = cls(self.canvas, 250 + offset, 20 + offset)
+            
         self.components.append(c)
-        self.log_event(f"Component added to workspace: {comp_type}")
+        self.log_event(f"Component added to workspace: {name}")
 
     def setup_code_tab(self):
         toolbar = tk.Frame(self.code_tab, bg="#3c3f41")

@@ -2,10 +2,11 @@ import tkinter as tk
 import math
 from .base_component import BaseComponent
 from .raspberry_pi import RaspberryPi
+from . import register_component
 
+@register_component("Pirate Audio (Mic)", color="#1c3b57")
 class PirateAudio(BaseComponent):
-    def __init__(self, canvas, x, y, app):
-        self.app = app
+    def __init__(self, canvas, x, y):
         super().__init__(canvas, x, y)
         self.draw()
         self.setup_draggable()

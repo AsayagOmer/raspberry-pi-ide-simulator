@@ -1,5 +1,8 @@
+import tkinter as tk
 from .base_component import BaseComponent
+from . import register_component
 
+@register_component("Raspberry Pi 4", color="#006400")
 class RaspberryPi(BaseComponent):
     def __init__(self, canvas, x, y):
         super().__init__(canvas, x, y)

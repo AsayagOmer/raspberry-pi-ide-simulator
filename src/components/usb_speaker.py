@@ -1,10 +1,11 @@
 import math
 from .base_component import BaseComponent
 from .raspberry_pi import RaspberryPi
+from . import register_component
 
+@register_component("Mini USB 2.0 external speaker", color="#333333")
 class USBSpeaker(BaseComponent):
-    def __init__(self, canvas, x, y, app):
-        self.app = app
+    def __init__(self, canvas, x, y):
         self.plug_tag = f"plug_{id(self)}"
         self.cable_id = None
         super().__init__(canvas, x, y)
