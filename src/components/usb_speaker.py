@@ -39,7 +39,7 @@ class USBSpeaker(BaseComponent):
         # Initialize plug position only if it doesn't exist (prevents reset on rotation)
         if not hasattr(self, 'plug_x'):
             cx, cy = self._rot_pt(80, 0)
-            self.plug_x, self.plug_y = self.x + cx - 100, self.y + cy - 80
+            self.plug_x, self.plug_y = self.x - 40, self.y + 30
 
         # Draw Cable
         self.cable_id = self.canvas.create_line(0, 0, 0, 0, fill="#111111", width=3, smooth=True, tags=self.tag)
@@ -82,7 +82,17 @@ class USBSpeaker(BaseComponent):
                 with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
         else:
             # Dragging Speaker Body
+            dx = event.x - self.drag_x
+            dy = event.y - self.drag_y
+            
+            # If the plug is not connected, drag it along with the speaker so it doesn't get left behind!
+            if self.connected_to is None:
+                self.canvas.move(self.plug_tag, dx, dy)
+                self.plug_x += dx
+                self.plug_y += dy
+                
             super().on_drag_motion(event)
+            
         self.update_cable()
 
     def on_drag_stop(self, event):
