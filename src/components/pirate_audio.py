@@ -4,7 +4,7 @@ from .base_component import BaseComponent
 from .raspberry_pi import RaspberryPi
 from . import register_component
 
-@register_component("Pirate Audio (Mic)", color="#1c3b57")
+@register_component("Pirate Audio (Mic)", color="#1a1a1a")
 class PirateAudio(BaseComponent):
     def __init__(self, canvas, x, y):
         super().__init__(canvas, x, y)
@@ -12,35 +12,72 @@ class PirateAudio(BaseComponent):
         self.setup_draggable()
 
     def draw(self):
-        # Board (Scale: ~4x, 65mm x 30mm -> 260x120 pHAT)
-        self.w, self.h = 260, 120
-        self._rect(0, 0, self.w, self.h, fill="#1c3b57", outline="#ffffff", width=2)
-        self._text(130, 10, text="Pirate Audio (pHAT)", fill="white", font=("Segoe UI", 7, "bold"))
-        
-        # Screen (1.3" IPS -> ~90x90 square in the center)
-        self.screen_rect = self._rect(85, 20, 90, 90, fill="black", outline="#444", width=4)
-        self.screen_text = self._text(130, 65, text="Off", fill="white", font=("Segoe UI", 8), width=85)
+        # Board: Pirate Audio Dual Mic pHAT
+        # Real: 65mm x 30mm → scaled ~4.5x → 290 x 135
+        self.w, self.h = 290, 135
 
-        # Buttons (A, B on Left. X, Y on Right of screen)
-        self._add_btn(10, 20, "A")
-        self._add_btn(10, 80, "B")
-        self._add_btn(210, 20, "X")
-        self._add_btn(210, 80, "Y")
-        
-        # Dual Mics (small gold circles)
-        self._oval(60, 20, 10, 10, fill="gold")
-        self._text(65, 15, text="MIC1", fill="gold", font=("Arial", 5))
-        self._oval(190, 20, 10, 10, fill="gold")
-        self._text(195, 15, text="MIC2", fill="gold", font=("Arial", 5))
+        # === Black PCB Board ===
+        self._rect(0, 0, self.w, self.h, fill="#1a1a1a", outline="#333333", width=3)
 
-        # GPIO Socket (Header aligns with Pi's GPIO, top edge underneath)
-        self._rect(30, -5, 200, 10, fill="black")
-        self._text(130, 0, text="GPIO Socket (Underside)", fill="white", font=("Arial", 6))
-        
+        # === Mounting Holes (4 corners, gold rings) ===
+        hole_r = 7
+        corners = [(8, 8), (self.w - 8 - hole_r * 2, 8),
+                   (8, self.h - 8 - hole_r * 2), (self.w - 8 - hole_r * 2, self.h - 8 - hole_r * 2)]
+        for cx, cy in corners:
+            self._oval(cx, cy, hole_r * 2, hole_r * 2, fill="#C8B560", outline="#A08830", width=2)
+            self._oval(cx + 3, cy + 3, hole_r * 2 - 6, hole_r * 2 - 6, fill="#1a1a1a")
+
+        # === "Pirate" text (white, script/italic, left side) ===
+        self._text(65, 42, text="Pirate", fill="white", font=("Georgia", 18, "bold italic"))
+
+        # === "audio" text (gold, below "Pirate") ===
+        self._text(72, 68, text="audio", fill="#C8B560", font=("Georgia", 14, "italic"))
+
+        # === Bottom labels: I2S, DUAL MIC, LCD (white rounded rects) ===
+        # I2S label
+        self._rect(30, 100, 35, 16, fill="#333", outline="white", width=1)
+        self._text(47, 108, text="I2S", fill="white", font=("Arial", 7, "bold"))
+        # DUAL MIC label
+        self._rect(75, 100, 55, 16, fill="#333", outline="white", width=1)
+        self._text(102, 108, text="DUAL MIC", fill="white", font=("Arial", 7, "bold"))
+        # LCD label
+        self._rect(140, 100, 30, 16, fill="#333", outline="white", width=1)
+        self._text(155, 108, text="LCD", fill="white", font=("Arial", 7, "bold"))
+
+        # === LCD Screen (1.3" IPS, right side of board) ===
+        # Screen housing (dark border)
+        self._rect(170, 8, 105, 105, fill="#111111", outline="#333", width=3)
+        # Screen inner display area
+        self.screen_rect = self._rect(175, 13, 95, 95, fill="black", outline="#222", width=2)
+        self.screen_text = self._text(222, 60, text="Off", fill="white", font=("Segoe UI", 9), width=88)
+
+        # === Buttons A, B (left of screen), X, Y (right of screen) ===
+        # Button A - top center-left (between text area and screen)
+        self._add_btn(148, 12, "A")
+        # Button B - bottom center-left
+        self._add_btn(148, 95, "B")
+        # Button X - top right
+        self._add_btn(258, 12, "X")
+        # Button Y - bottom right
+        self._add_btn(258, 95, "Y")
+
+        # === MIC L (left edge, gold pad with label) ===
+        self._rect(-4, 75, 22, 18, fill="#C8B560", outline="#A08830", width=1)
+        self._text(7, 84, text="MIC", fill="black", font=("Arial", 5, "bold"))
+        self._text(7, 70, text="L", fill="white", font=("Arial", 6, "bold"))
+
+        # === MIC R (right edge, gold pad with label) ===
+        self._rect(self.w - 18, 75, 22, 18, fill="#C8B560", outline="#A08830", width=1)
+        self._text(self.w - 7, 84, text="MIC", fill="black", font=("Arial", 5, "bold"))
+        self._text(self.w - 7, 70, text="R", fill="white", font=("Arial", 6, "bold"))
+
+        # === GPIO Socket (underside, along bottom edge — hidden connector) ===
+        self._rect(30, self.h - 4, 230, 8, fill="#1a1a1a", outline="#444")
+
         self.update_ports()
 
     def update_ports(self):
-        gx, gy = self._rot_pt(130, 0)
+        gx, gy = self._rot_pt(145, self.h)
         self.socket_x, self.socket_y = self.x + gx, self.y + gy
 
     def delete(self):

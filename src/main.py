@@ -108,8 +108,9 @@ class IDEApp(tk.Tk):
         self.left_frame = tk.Frame(self.paned, bg="#3c3f41", bd=2, relief=tk.SUNKEN)
         self.paned.add(self.left_frame, weight=1)
         tk.Label(self.left_frame, text="Hardware Workspace", font=("Segoe UI", 14, "bold"), bg="#3c3f41", fg="white").pack(pady=5)
-        self.canvas = tk.Canvas(self.left_frame, bg="#2b2b2b", highlightthickness=0)
+        self.canvas = tk.Canvas(self.left_frame, bg="#f0f0f0", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.canvas.bind("<Configure>", self._draw_graph_paper)
 
         # Right Notebook
         self.right_notebook = ttk.Notebook(self.paned)
@@ -130,6 +131,24 @@ class IDEApp(tk.Tk):
         self.bind("<Control-x>", self.hw_cut)
         self.bind("<Control-z>", self.hw_undo)
         self.bind("<Control-y>", self.hw_redo)
+
+    def _draw_graph_paper(self, event=None):
+        """Draw a graph paper grid pattern on the canvas background."""
+        self.canvas.delete("grid_line")
+        w = self.canvas.winfo_width()
+        h = self.canvas.winfo_height()
+        # Minor grid lines (light, every 20px)
+        for x in range(0, w, 20):
+            self.canvas.create_line(x, 0, x, h, fill="#d6d6d6", width=1, tags="grid_line")
+        for y in range(0, h, 20):
+            self.canvas.create_line(0, y, w, y, fill="#d6d6d6", width=1, tags="grid_line")
+        # Major grid lines (darker, every 100px)
+        for x in range(0, w, 100):
+            self.canvas.create_line(x, 0, x, h, fill="#c0c0c0", width=1, tags="grid_line")
+        for y in range(0, h, 100):
+            self.canvas.create_line(0, y, w, y, fill="#c0c0c0", width=1, tags="grid_line")
+        # Push grid lines to the back so components draw on top
+        self.canvas.tag_lower("grid_line")
 
     def delete_hovered_component(self, event=None):
         # Don't delete components if the user is typing in the code editor!
