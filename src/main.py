@@ -57,18 +57,8 @@ class IDEApp(tk.Tk):
         tk.Label(self.left_frame, text="Hardware Workspace", font=("Segoe UI", 14, "bold"), bg="#3c3f41", fg="white").pack(pady=5)
         self.canvas = tk.Canvas(self.left_frame, bg="#2b2b2b", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        self.canvas.bind("<Button-1>", lambda e: self.canvas.focus_set())
-        self.canvas.bind("<Delete>", self.on_delete_component)
 
-    def on_delete_component(self, event):
-        items = self.canvas.find_withtag("current")
-        if not items: return
-        for comp in self.components:
-            if items[0] in comp.items:
-                comp.delete()
-                break
-
-    # Right Notebook
+        # Right Notebook
         self.right_notebook = ttk.Notebook(self.paned)
         self.paned.add(self.right_notebook, weight=1)
 
@@ -79,6 +69,18 @@ class IDEApp(tk.Tk):
         self.comp_tab = ttk.Frame(self.right_notebook)
         self.right_notebook.add(self.comp_tab, text="🔌 Component Library")
         self.setup_components_tab()
+
+        self.bind("<Delete>", self.delete_hovered_component)
+        self.bind("<BackSpace>", self.delete_hovered_component)
+
+    def delete_hovered_component(self, event=None):
+        # Don't delete components if the user is typing in the code editor!
+        if isinstance(self.focus_get(), tk.Text):
+            return
+        comp = getattr(self, 'hovered_component', None)
+        if comp:
+            self.log_event(f"Component erased from workspace: {comp.__class__.__name__}")
+            comp.delete()
 
     def setup_components_tab(self):
         lbl = tk.Label(self.comp_tab, text="Click to add components to workspace:", font=("Segoe UI", 12), bg="#2b2b2b", fg="white")

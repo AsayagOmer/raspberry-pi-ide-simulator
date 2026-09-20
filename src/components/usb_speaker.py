@@ -33,6 +33,11 @@ class USBSpeaker(BaseComponent):
         cx, cy = self._rot_pt(0, 75)
         self.canvas.coords(self.cable_id, self.x+cx, self.y+cy, self.x+cx-50, self.plug_y+50, self.plug_x, self.plug_y)
 
+    def delete(self):
+        if self.connected_to is not None:
+            with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
+        super().delete()
+
     def on_drag_motion(self, event):
         item = self.canvas.find_withtag("current")
         if item and self.plug_tag in self.canvas.gettags(item[0]):

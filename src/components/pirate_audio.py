@@ -42,6 +42,11 @@ class PirateAudio(BaseComponent):
         gx, gy = self._rot_pt(130, 0)
         self.socket_x, self.socket_y = self.x + gx, self.y + gy
 
+    def delete(self):
+        if self.connected_to is not None:
+            with open("hardware.log", "a") as f: f.write("Pirate Audio is disconnected from GPIO Header\n")
+        super().delete()
+
     def _add_btn(self, bx, by, key):
         btn = tk.Button(self.canvas, text=key, font=("Segoe UI", 7, "bold"), width=2, height=1, bg="#d3d3d3", cursor="hand2")
         self._window(bx, by, anchor=tk.NW, window=btn)

@@ -1,6 +1,7 @@
 class BaseComponent:
     def __init__(self, canvas, x, y):
         self.canvas = canvas
+        self.app = canvas.winfo_toplevel()
         self.x, self.y = x, y
         self.rotation = 0 # 0, 90, 180, 270
         self.tag = f"comp_{id(self)}"
@@ -14,6 +15,14 @@ class BaseComponent:
             self.canvas.delete(item)
         self.items = []
         self.draw()
+
+    def delete(self):
+        for item in self.items:
+            self.canvas.delete(item)
+        if self in getattr(self.app, 'components', []):
+            self.app.components.remove(self)
+        if getattr(self.app, 'hovered_component', None) == self:
+            self.app.hovered_component = None
         
     def rotate(self, event=None):
         self.rotation = (self.rotation + 90) % 360
@@ -26,8 +35,15 @@ class BaseComponent:
         self.canvas.tag_bind(tag, "<ButtonRelease-1>", self.on_drag_stop)
         # Right click to rotate
         self.canvas.tag_bind(tag, "<Button-3>", self.rotate)
-        self.canvas.tag_bind(tag, "<Enter>", lambda e: self.canvas.config(cursor="fleur"))
-        self.canvas.tag_bind(tag, "<Leave>", lambda e: self.canvas.config(cursor=""))
+        def on_enter(e):
+            self.canvas.config(cursor="fleur")
+            self.app.hovered_component = self
+        def on_leave(e):
+            self.canvas.config(cursor="")
+            if getattr(self.app, 'hovered_component', None) == self:
+                self.app.hovered_component = None
+        self.canvas.tag_bind(tag, "<Enter>", on_enter)
+        self.canvas.tag_bind(tag, "<Leave>", on_leave)
 
     def _rot_pt(self, rx, ry):
         if self.rotation == 90: return self.h - ry, rx
@@ -79,7 +95,6 @@ class BaseComponent:
         return item
 
     def on_drag_start(self, event):
-        self.canvas.focus_set()
         self.drag_x = event.x
         self.drag_y = event.y
         for item in self.items:
@@ -96,14 +111,3 @@ class BaseComponent:
 
     def on_drag_stop(self, event):
         pass
-
-    def on_right_click(self, event):
-        self.rotation = (self.rotation + 90) % 360
-        self.redraw()
-
-    def delete(self):
-        for item in self.items:
-            self.canvas.delete(item)
-        if self in self.app.components:
-            self.app.components.remove(self)
-        self.app.log_event(f"Component deleted: {self.__class__.__name__}")
