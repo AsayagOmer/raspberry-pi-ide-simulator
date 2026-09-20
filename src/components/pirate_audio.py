@@ -121,7 +121,8 @@ class PirateAudio(BaseComponent):
         # Snap to RPi GPIO
         for comp in self.app.components:
             if isinstance(comp, RaspberryPi):
-                if math.hypot(self.socket_x - comp.gpio_x, self.socket_y - comp.gpio_y) < 40:
+                threshold = 40 * getattr(self.app, 'zoom_factor', 1.0)
+                if math.hypot(self.socket_x - comp.gpio_x, self.socket_y - comp.gpio_y) < threshold:
                     dx = comp.gpio_x - self.socket_x
                     dy = comp.gpio_y - self.socket_y
                     self.canvas.move(self.tag, dx, dy)

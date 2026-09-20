@@ -23,6 +23,7 @@ class IDEApp(tk.Tk):
         self.hardware_history = []
         self.history_index = -1
         self.copied_component = None
+        self.zoom_factor = 1.0
 
         pygame.mixer.init()
 
@@ -78,15 +79,16 @@ class IDEApp(tk.Tk):
                 self.components.append(c)
                 
         # Silently re-establish connections based on distances
+        threshold = 40 * self.zoom_factor
         for c in self.components:
             if getattr(c, 'socket_x', None) is not None:
                 for comp in self.components:
-                    if isinstance(comp, RaspberryPi) and math.hypot(c.socket_x - comp.gpio_x, c.socket_y - comp.gpio_y) < 40:
+                    if isinstance(comp, RaspberryPi) and math.hypot(c.socket_x - comp.gpio_x, c.socket_y - comp.gpio_y) < threshold:
                         c.connected_to = comp
                         break
             if getattr(c, 'plug_x', None) is not None:
                 for comp in self.components:
-                    if isinstance(comp, RaspberryPi) and math.hypot(c.plug_x - comp.usb2_x, c.plug_y - comp.usb2_y) < 40:
+                    if isinstance(comp, RaspberryPi) and math.hypot(c.plug_x - comp.usb2_x, c.plug_y - comp.usb2_y) < threshold:
                         c.connected_to = comp
                         break
 
@@ -157,11 +159,20 @@ class IDEApp(tk.Tk):
         self.paned.add(self.left_frame, stretch="always")
         tk.Label(self.left_frame, text="Hardware Workspace", font=("Segoe UI", 14, "bold"), bg="#3c3f41", fg="white").pack(pady=5)
         
-        # Upper Hardware Toolbar (Undo/Redo)
+        # Upper Hardware Toolbar (Undo/Redo & Zoom)
         self.hw_toolbar = tk.Frame(self.left_frame, bg="#3c3f41")
         self.hw_toolbar.pack(fill=tk.X, padx=5, pady=2)
         tk.Button(self.hw_toolbar, text="↩ Undo", bg="#555", fg="white", command=self.hw_undo, relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
         tk.Button(self.hw_toolbar, text="↪ Redo", bg="#555", fg="white", command=self.hw_redo, relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
+
+        # Zoom Controls
+        self.zoom_frame = tk.Frame(self.hw_toolbar, bg="#3c3f41")
+        self.zoom_frame.pack(side=tk.RIGHT, padx=5)
+        tk.Button(self.zoom_frame, text=" - ", bg="#555", fg="white", command=lambda: self.set_zoom(self.zoom_factor - 0.1), relief=tk.FLAT).pack(side=tk.LEFT, padx=2)
+        self.zoom_label = tk.Label(self.zoom_frame, text="100%", bg="#3c3f41", fg="white", width=5)
+        self.zoom_label.pack(side=tk.LEFT, padx=2)
+        tk.Button(self.zoom_frame, text=" + ", bg="#555", fg="white", command=lambda: self.set_zoom(self.zoom_factor + 0.1), relief=tk.FLAT).pack(side=tk.LEFT, padx=2)
+        tk.Button(self.zoom_frame, text=" ⛶ ", bg="#555", fg="white", command=lambda: self.set_zoom(1.0), relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
 
         # Coordinate label at bottom
         self.coord_label = tk.Label(self.left_frame, text="X: 0, Y: 0", font=("Consolas", 10), bg="#3c3f41", fg="#aaa")
@@ -205,12 +216,45 @@ class IDEApp(tk.Tk):
         self.bind("<Control-Shift-Z>", self.hw_redo)
         self.bind("<Control-Shift-z>", self.hw_redo)
 
+    def set_zoom(self, new_zoom):
+        old_zoom = self.zoom_factor
+        self.zoom_factor = max(0.2, min(3.0, round(new_zoom, 2)))
+        if self.zoom_factor == old_zoom: return
+        
+        ratio = self.zoom_factor / old_zoom
+        cx = self.canvas.winfo_width() / 2
+        cy = self.canvas.winfo_height() / 2
+        
+        self.zoom_label.config(text=f"{int(self.zoom_factor * 100)}%")
+        
+        for comp in self.components:
+            comp.x = cx + (comp.x - cx) * ratio
+            comp.y = cy + (comp.y - cy) * ratio
+            if hasattr(comp, 'socket_x'):
+                comp.socket_x = cx + (comp.socket_x - cx) * ratio
+                comp.socket_y = cy + (comp.socket_y - cy) * ratio
+            if hasattr(comp, 'plug_x'):
+                comp.plug_x = cx + (comp.plug_x - cx) * ratio
+                comp.plug_y = cy + (comp.plug_y - cy) * ratio
+            if hasattr(comp, 'gpio_x'):
+                comp.gpio_x = cx + (comp.gpio_x - cx) * ratio
+                comp.gpio_y = cy + (comp.gpio_y - cy) * ratio
+            if hasattr(comp, 'usb2_x'):
+                comp.usb2_x = cx + (comp.usb2_x - cx) * ratio
+                comp.usb2_y = cy + (comp.usb2_y - cy) * ratio
+            if hasattr(comp, 'usb3_x'):
+                comp.usb3_x = cx + (comp.usb3_x - cx) * ratio
+                comp.usb3_y = cy + (comp.usb3_y - cy) * ratio
+            comp.redraw()
+            
+        self._draw_graph_paper()
+
     def _update_coords(self, event):
         cx = self.canvas.winfo_width() // 2
         cy = self.canvas.winfo_height() // 2
-        # Center is (0, 0). Standard screen space translates X and Y.
-        rel_x = event.x - cx
-        rel_y = event.y - cy
+        # Reverse zoom scaling to show real model coords
+        rel_x = int((event.x - cx) / self.zoom_factor)
+        rel_y = int((event.y - cy) / self.zoom_factor)
         self.coord_label.config(text=f"X: {rel_x}, Y: {rel_y}")
 
     def _draw_graph_paper(self, event=None):
@@ -220,19 +264,19 @@ class IDEApp(tk.Tk):
         cx = w // 2
         cy = h // 2
         
-        # Minor grid lines aligned to center
-        for x in range(cx % 20, w, 20):
+        step_minor = max(5, int(20 * self.zoom_factor))
+        step_major = max(25, int(100 * self.zoom_factor))
+        
+        for x in range(cx % step_minor, w, step_minor):
             self.canvas.create_line(x, 0, x, h, fill="#d6d6d6", width=1, tags="grid_line")
-        for y in range(cy % 20, h, 20):
+        for y in range(cy % step_minor, h, step_minor):
             self.canvas.create_line(0, y, w, y, fill="#d6d6d6", width=1, tags="grid_line")
             
-        # Major grid lines aligned to center
-        for x in range(cx % 100, w, 100):
+        for x in range(cx % step_major, w, step_major):
             self.canvas.create_line(x, 0, x, h, fill="#c0c0c0", width=1, tags="grid_line")
-        for y in range(cy % 100, h, 100):
+        for y in range(cy % step_major, h, step_major):
             self.canvas.create_line(0, y, w, y, fill="#c0c0c0", width=1, tags="grid_line")
             
-        # Origin axes (darker center lines)
         self.canvas.create_line(cx, 0, cx, h, fill="#888888", width=2, tags="grid_line")
         self.canvas.create_line(0, cy, w, cy, fill="#888888", width=2, tags="grid_line")
         

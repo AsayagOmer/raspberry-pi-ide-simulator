@@ -51,11 +51,24 @@ class BaseComponent:
         self.canvas.tag_bind(tag, "<Enter>", on_enter)
         self.canvas.tag_bind(tag, "<Leave>", on_leave)
 
+    def _get_z(self):
+        return getattr(self.app, 'zoom_factor', 1.0)
+
     def _rot_pt(self, rx, ry):
         if self.rotation == 90: return self.h - ry, rx
         elif self.rotation == 180: return self.w - rx, self.h - ry
         elif self.rotation == 270: return ry, self.w - rx
         return rx, ry
+
+    def _scale_kwargs(self, kwargs, z):
+        if 'width' in kwargs:
+            kwargs['width'] = max(1, int(float(kwargs['width']) * z))
+        if 'font' in kwargs:
+            f = kwargs['font']
+            new_size = max(1, int(f[1] * z))
+            if len(f) == 3: kwargs['font'] = (f[0], new_size, f[2])
+            else: kwargs['font'] = (f[0], new_size)
+        if 'tags' not in kwargs: kwargs['tags'] = self.tag
 
     def _rect(self, rx, ry, rw, rh, **kwargs):
         if self.rotation == 90:
@@ -66,7 +79,10 @@ class BaseComponent:
             x1, y1, w, h = ry, self.w - rx - rw, rh, rw
         else:
             x1, y1, w, h = rx, ry, rw, rh
-        if 'tags' not in kwargs: kwargs['tags'] = self.tag
+        
+        z = self._get_z()
+        x1, y1, w, h = x1*z, y1*z, w*z, h*z
+        self._scale_kwargs(kwargs, z)
         item = self.canvas.create_rectangle(self.x+x1, self.y+y1, self.x+x1+w, self.y+y1+h, **kwargs)
         self.items.append(item)
         return item
@@ -80,22 +96,30 @@ class BaseComponent:
             x1, y1, w, h = ry, self.w - rx - rw, rh, rw
         else:
             x1, y1, w, h = rx, ry, rw, rh
-        if 'tags' not in kwargs: kwargs['tags'] = self.tag
+            
+        z = self._get_z()
+        x1, y1, w, h = x1*z, y1*z, w*z, h*z
+        self._scale_kwargs(kwargs, z)
         item = self.canvas.create_oval(self.x+x1, self.y+y1, self.x+x1+w, self.y+y1+h, **kwargs)
         self.items.append(item)
         return item
 
     def _text(self, rx, ry, text, **kwargs):
         px, py = self._rot_pt(rx, ry)
+        z = self._get_z()
+        px, py = px*z, py*z
+        
         angle = (kwargs.pop('angle', 0) + self.rotation) % 360
-        if 'tags' not in kwargs: kwargs['tags'] = self.tag
+        self._scale_kwargs(kwargs, z)
         item = self.canvas.create_text(self.x+px, self.y+py, text=text, angle=angle, **kwargs)
         self.items.append(item)
         return item
 
     def _window(self, rx, ry, **kwargs):
         px, py = self._rot_pt(rx, ry)
-        if 'tags' not in kwargs: kwargs['tags'] = self.tag
+        z = self._get_z()
+        px, py = px*z, py*z
+        self._scale_kwargs(kwargs, z)
         item = self.canvas.create_window(self.x+px, self.y+py, **kwargs)
         self.items.append(item)
         return item
