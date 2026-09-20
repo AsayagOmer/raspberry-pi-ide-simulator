@@ -35,14 +35,14 @@ class PirateAudio(BaseComponent):
 
         # === Bottom labels: I2S, DUAL MIC, LCD (white rounded rects) ===
         # I2S label
-        self._rect(30, 100, 35, 16, fill="#333", outline="white", width=1)
-        self._text(47, 108, text="I2S", fill="white", font=("Arial", 7, "bold"))
+        self._rect(18, 103, 25, 12, fill="#333", outline="white", width=1)
+        self._text(30, 109, text="I2S", fill="white", font=("Arial", 5, "bold"))
         # DUAL MIC label
-        self._rect(75, 100, 55, 16, fill="#333", outline="white", width=1)
-        self._text(102, 108, text="DUAL MIC", fill="white", font=("Arial", 7, "bold"))
+        self._rect(48, 103, 42, 12, fill="#333", outline="white", width=1)
+        self._text(69, 109, text="DUAL MIC", fill="white", font=("Arial", 5, "bold"))
         # LCD label
-        self._rect(140, 100, 30, 16, fill="#333", outline="white", width=1)
-        self._text(155, 108, text="LCD", fill="white", font=("Arial", 7, "bold"))
+        self._rect(95, 103, 25, 12, fill="#333", outline="white", width=1)
+        self._text(107, 109, text="LCD", fill="white", font=("Arial", 5, "bold"))
 
         # === LCD Screen (1.3" IPS, right side of board) ===
         # Screen housing (dark border)
