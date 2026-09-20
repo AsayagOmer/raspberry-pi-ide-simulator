@@ -59,22 +59,26 @@ class IDEApp(tk.Tk):
         if self.history_index > 0:
             self.history_index -= 1
             self.load_hardware_state(self.hardware_history[self.history_index])
+        return "break"
 
     def hw_redo(self, event=None):
         if isinstance(self.focus_get(), tk.Text): return
         if self.history_index < len(self.hardware_history) - 1:
             self.history_index += 1
             self.load_hardware_state(self.hardware_history[self.history_index])
+        return "break"
 
     def hw_copy(self, event=None):
         if isinstance(self.focus_get(), tk.Text): return
         comp = getattr(self, 'hovered_component', None)
         if comp: self.copied_component = next((n for n, d in COMPONENT_REGISTRY.items() if d["class"] == comp.__class__), None)
+        return "break"
 
     def hw_cut(self, event=None):
         if isinstance(self.focus_get(), tk.Text): return
         self.hw_copy()
         self.delete_hovered_component()
+        return "break"
 
     def hw_paste(self, event=None):
         if isinstance(self.focus_get(), tk.Text): return
@@ -84,6 +88,7 @@ class IDEApp(tk.Tk):
             c = COMPONENT_REGISTRY[self.copied_component]["class"](self.canvas, x, y)
             self.components.append(c)
             self.save_hardware_state()
+        return "break"
 
     def setup_styles(self):
         style = ttk.Style()
@@ -235,9 +240,11 @@ else:
     def add_file_tab(self, filename, content=""):
         frame = tk.Frame(self.file_notebook, bg="#1e1e1e")
         self.file_notebook.add(frame, text=filename)
-        editor = tk.Text(frame, font=("Consolas", 12), bg="#1e1e1e", fg="#d4d4d4", insertbackground="white", undo=True, maxundo=50)
+        editor = tk.Text(frame, font=("Consolas", 12), bg="#1e1e1e", fg="#d4d4d4", insertbackground="white", undo=True, maxundo=50, autoseparators=True)
         editor.pack(fill=tk.BOTH, expand=True)
         editor.insert(tk.END, content)
+        editor.edit_reset()  # Clear undo stack so initial content isn't undoable
+        editor.edit_modified(False)
         
         # Explicitly handle shortcut keys robustly
         def safe_undo(event):
