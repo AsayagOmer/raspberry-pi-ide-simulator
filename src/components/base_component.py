@@ -105,6 +105,8 @@ class BaseComponent:
         self.drag_y = event.y
         for item in self.items:
             self.canvas.tag_raise(item)
+        # Ensure floating UI (like undo/redo buttons) stays on top of the dragged component
+        self.canvas.tag_raise("floating_ui")
 
     def on_drag_motion(self, event):
         dx = event.x - self.drag_x
