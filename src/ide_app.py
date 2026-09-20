@@ -172,7 +172,6 @@ class IDEApp(tk.Tk):
         self.zoom_label = tk.Label(self.zoom_frame, text="100%", bg="#3c3f41", fg="white", width=5)
         self.zoom_label.pack(side=tk.LEFT, padx=2)
         tk.Button(self.zoom_frame, text=" + ", bg="#555", fg="white", command=lambda: self.set_zoom(self.zoom_factor + 0.1), relief=tk.FLAT).pack(side=tk.LEFT, padx=2)
-        tk.Button(self.zoom_frame, text=" ⛶ ", bg="#555", fg="white", command=lambda: self.set_zoom(1.0), relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
 
         # Coordinate label at bottom
         self.coord_label = tk.Label(self.left_frame, text="X: 0, Y: 0", font=("Consolas", 10), bg="#3c3f41", fg="#aaa")
