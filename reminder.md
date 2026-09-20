@@ -5,7 +5,11 @@
 
 How the GUI is. It follows these notes:
 
-* Start with clear board, no components
+* Start with clear hardware workspace's board, no components
+* The hardware workspace's board has a clear graph paper (light-gray squared sheet).
+* The hardware workspace's board is a grid.
+* In the bottom of the hardware workspace should be the last coordinates of the cursor on the hardware workspace's board.
+* In the upper part of the hardware workspace's board should be forward Redo & undo.
 * Enable ctrl+z, ctrl+v, ctrl+x, ctrl+c, ctrl+y for the code & hardware workspace.
 * There is 2 buttons: "Run Code", "Stop".
 
@@ -32,4 +36,4 @@ How the GUI is. It follows these notes:
 
 ---
 
-Please inform me that you read it, say: "Omer, I read the reminder as requested".
+Please inform me that you read it again; in each answer, by saying: "Omer, I read the reminder as requested".
