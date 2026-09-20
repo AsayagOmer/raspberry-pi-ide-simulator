@@ -17,18 +17,73 @@ class IDEApp(tk.Tk):
         self.components = []
         self.button_states = {'A': False, 'B': False, 'X': False, 'Y': False}
         self.current_file = None
+        
+        self.hardware_history = []
+        self.history_index = -1
+        self.copied_component = None
 
         pygame.mixer.init()
 
         self.setup_styles()
         self.setup_ui()
         self.log_event("IDE started with a clear board.")
+        self.save_hardware_state()
 
     def log_event(self, text):
         import datetime
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open("event.log", "a") as f:
             f.write(f"[{timestamp}] {text}\n")
+
+    def save_hardware_state(self):
+        state = []
+        for c in self.components:
+            name = next((n for n, d in COMPONENT_REGISTRY.items() if d["class"] == c.__class__), None)
+            if name: state.append((name, c.x, c.y, getattr(c, 'rotation', 0)))
+        self.history_index += 1
+        self.hardware_history = self.hardware_history[:self.history_index]
+        self.hardware_history.append(state)
+
+    def load_hardware_state(self, state):
+        for c in list(self.components): c.delete()
+        self.components = []
+        for name, x, y, rot in state:
+            if name in COMPONENT_REGISTRY:
+                c = COMPONENT_REGISTRY[name]["class"](self.canvas, x, y)
+                c.rotation = rot
+                c.redraw()
+                self.components.append(c)
+
+    def hw_undo(self, event=None):
+        if isinstance(self.focus_get(), tk.Text): return
+        if self.history_index > 0:
+            self.history_index -= 1
+            self.load_hardware_state(self.hardware_history[self.history_index])
+
+    def hw_redo(self, event=None):
+        if isinstance(self.focus_get(), tk.Text): return
+        if self.history_index < len(self.hardware_history) - 1:
+            self.history_index += 1
+            self.load_hardware_state(self.hardware_history[self.history_index])
+
+    def hw_copy(self, event=None):
+        if isinstance(self.focus_get(), tk.Text): return
+        comp = getattr(self, 'hovered_component', None)
+        if comp: self.copied_component = next((n for n, d in COMPONENT_REGISTRY.items() if d["class"] == comp.__class__), None)
+
+    def hw_cut(self, event=None):
+        if isinstance(self.focus_get(), tk.Text): return
+        self.hw_copy()
+        self.delete_hovered_component()
+
+    def hw_paste(self, event=None):
+        if isinstance(self.focus_get(), tk.Text): return
+        if self.copied_component:
+            x, y = event.x_root - self.canvas.winfo_rootx(), event.y_root - self.canvas.winfo_rooty()
+            if x < 0 or y < 0 or x > self.canvas.winfo_width() or y > self.canvas.winfo_height(): x, y = 50, 50
+            c = COMPONENT_REGISTRY[self.copied_component]["class"](self.canvas, x, y)
+            self.components.append(c)
+            self.save_hardware_state()
 
     def setup_styles(self):
         style = ttk.Style()
@@ -70,6 +125,11 @@ class IDEApp(tk.Tk):
 
         self.bind("<Delete>", self.delete_hovered_component)
         self.bind("<BackSpace>", self.delete_hovered_component)
+        self.bind("<Control-c>", self.hw_copy)
+        self.bind("<Control-v>", self.hw_paste)
+        self.bind("<Control-x>", self.hw_cut)
+        self.bind("<Control-z>", self.hw_undo)
+        self.bind("<Control-y>", self.hw_redo)
 
     def delete_hovered_component(self, event=None):
         # Don't delete components if the user is typing in the code editor!
@@ -79,6 +139,7 @@ class IDEApp(tk.Tk):
         if comp:
             self.log_event(f"Component erased from workspace: {comp.__class__.__name__}")
             comp.delete()
+            self.save_hardware_state()
 
     def setup_components_tab(self):
         lbl = tk.Label(self.comp_tab, text="Click to add components to workspace:", font=("Segoe UI", 12), bg="#2b2b2b", fg="white")
@@ -110,6 +171,7 @@ class IDEApp(tk.Tk):
             
         self.components.append(c)
         self.log_event(f"Component added to workspace: {name}")
+        self.save_hardware_state()
 
     def setup_code_tab(self):
         toolbar = tk.Frame(self.code_tab, bg="#3c3f41")

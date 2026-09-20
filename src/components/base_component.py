@@ -27,12 +27,18 @@ class BaseComponent:
     def rotate(self, event=None):
         self.rotation = (self.rotation + 90) % 360
         self.redraw()
+        self.app.save_hardware_state()
 
     def setup_draggable(self, specific_tag=None):
         tag = specific_tag if specific_tag else self.tag
         self.canvas.tag_bind(tag, "<ButtonPress-1>", self.on_drag_start)
         self.canvas.tag_bind(tag, "<B1-Motion>", self.on_drag_motion)
-        self.canvas.tag_bind(tag, "<ButtonRelease-1>", self.on_drag_stop)
+        
+        def on_drag_stop_wrapper(e):
+            if hasattr(self, 'on_drag_stop'): self.on_drag_stop(e)
+            self.app.save_hardware_state()
+            
+        self.canvas.tag_bind(tag, "<ButtonRelease-1>", on_drag_stop_wrapper)
         # Right click to rotate
         self.canvas.tag_bind(tag, "<Button-3>", self.rotate)
         def on_enter(e):

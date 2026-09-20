@@ -6,7 +6,7 @@
 How the GUI is. It follows these notes:
 
 * Start with clear board, no components
-* Enable ctrl+z, ctrl+v, ctrl+x, ctrl+c, ctrl+y for the code
+* Enable ctrl+z, ctrl+v, ctrl+x, ctrl+c, ctrl+y for the code & hardware workspace.
 * There is 2 buttons: "Run Code", "Stop".
 
 ### Hardware Components
