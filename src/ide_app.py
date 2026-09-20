@@ -157,20 +157,18 @@ class IDEApp(tk.Tk):
         self.paned.add(self.left_frame, weight=1)
         tk.Label(self.left_frame, text="Hardware Workspace", font=("Segoe UI", 14, "bold"), bg="#3c3f41", fg="white").pack(pady=5)
         
+        # Upper Hardware Toolbar (Undo/Redo)
+        self.hw_toolbar = tk.Frame(self.left_frame, bg="#3c3f41")
+        self.hw_toolbar.pack(fill=tk.X, padx=5, pady=2)
+        tk.Button(self.hw_toolbar, text="↩ Undo", bg="#555", fg="white", command=self.hw_undo, relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
+        tk.Button(self.hw_toolbar, text="↪ Redo", bg="#555", fg="white", command=self.hw_redo, relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
+
         # Coordinate label at bottom
         self.coord_label = tk.Label(self.left_frame, text="X: 0, Y: 0", font=("Consolas", 10), bg="#3c3f41", fg="#aaa")
         self.coord_label.pack(side=tk.BOTTOM, anchor=tk.E, padx=5, pady=2)
 
         self.canvas = tk.Canvas(self.left_frame, bg="#f0f0f0", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # Upper Hardware Toolbar (Undo/Redo) floating on the canvas
-        self.hw_toolbar = tk.Frame(self.canvas, bg="#3c3f41")
-        tk.Button(self.hw_toolbar, text="↩ Undo", bg="#555", fg="white", command=self.hw_undo, relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
-        tk.Button(self.hw_toolbar, text="↪ Redo", bg="#555", fg="white", command=self.hw_redo, relief=tk.FLAT).pack(side=tk.LEFT, padx=5)
-        # Place it at the top-left of the canvas (floating)
-        self.canvas.create_window(10, 10, anchor=tk.NW, window=self.hw_toolbar, tags="floating_ui")
-
         self.canvas.bind("<Configure>", self._draw_graph_paper)
         self.canvas.bind("<ButtonPress-1>", lambda e: self.canvas.focus_set())
         self.canvas.bind("<Motion>", self._update_coords)

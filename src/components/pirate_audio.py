@@ -86,10 +86,29 @@ class PirateAudio(BaseComponent):
         super().delete()
 
     def _add_btn(self, bx, by, key):
-        btn = tk.Button(self.canvas, text=key, font=("Segoe UI", 7, "bold"), width=2, height=1, bg="#d3d3d3", cursor="hand2")
-        self._window(bx, by, anchor=tk.NW, window=btn)
-        btn.bind("<ButtonPress-1>", lambda e: self.app.button_states.update({key: True}))
-        btn.bind("<ButtonRelease-1>", lambda e: self.app.button_states.update({key: False}))
+        btn_tag = f"{self.tag}_btn_{key}"
+        bw, bh = 15, 15
+        
+        # Draw native canvas button so it respects stacking (Z-index) properly
+        rect_id = self._rect(bx, by, bw, bh, fill="#d3d3d3", outline="#888", width=1, tags=(self.tag, btn_tag))
+        # Draw button label
+        text_id = self._text(bx + bw/2, by + bh/2, text=key, fill="black", font=("Segoe UI", 7, "bold"), tags=(self.tag, btn_tag))
+        
+        # Hover cursor
+        self.canvas.tag_bind(btn_tag, "<Enter>", lambda e: self.canvas.config(cursor="hand2"), add="+")
+        self.canvas.tag_bind(btn_tag, "<Leave>", lambda e: self.canvas.config(cursor=""), add="+")
+        
+        # Button state logic
+        def on_press(e):
+            self.app.button_states[key] = True
+            self.canvas.itemconfig(rect_id, fill="#a0a0a0")
+            
+        def on_release(e):
+            self.app.button_states[key] = False
+            self.canvas.itemconfig(rect_id, fill="#d3d3d3")
+            
+        self.canvas.tag_bind(btn_tag, "<ButtonPress-1>", on_press, add="+")
+        self.canvas.tag_bind(btn_tag, "<ButtonRelease-1>", on_release, add="+")
 
     def on_drag_motion(self, event):
         super().on_drag_motion(event)
