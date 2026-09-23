@@ -169,6 +169,13 @@ class RaspberryPi(BaseComponent):
         u2x, u2y = self._rot_pt(402, 190)
         self.usb2_x, self.usb2_y = self.x + u2x, self.y + u2y
 
+    def get_ports(self):
+        return [
+            {"name": "gpio_header", "direction": "in", "x": self.gpio_x, "y": self.gpio_y},
+            {"name": "usb2_port",   "direction": "in", "x": self.usb2_x, "y": self.usb2_y},
+            {"name": "usb3_port",   "direction": "in", "x": self.usb3_x, "y": self.usb3_y},
+        ]
+
     def on_drag_motion(self, event):
         super().on_drag_motion(event)
         self.update_ports()

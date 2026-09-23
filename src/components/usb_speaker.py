@@ -1,6 +1,5 @@
-import math
+import os
 from .base_component import BaseComponent
-from .raspberry_pi import RaspberryPi
 from . import register_component
 
 @register_component("Mini USB 2.0 external speaker", color="#111111")
@@ -74,9 +73,27 @@ class USBSpeaker(BaseComponent):
             self.plug_x, self.plug_y + 40*z
         )
 
+    def get_ports(self):
+        return [
+            {"name": "usb_plug", "direction": "out", "x": self.plug_x, "y": self.plug_y},
+        ]
+
+    def snap_port_to(self, port_name, target_x, target_y):
+        """Move only the USB plug so it lands at (target_x, target_y)."""
+        if port_name == "usb_plug":
+            dx = target_x - self.plug_x
+            dy = target_y - self.plug_y
+            self.canvas.move(self.plug_tag, dx, dy)
+            self.plug_x = target_x
+            self.plug_y = target_y
+            self.update_cable()
+
     def delete(self):
-        if self.connected_to is not None:
-            with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
+        cm = getattr(self.app, 'connection_manager', None)
+        if cm:
+            cm.disconnect(self)
+        elif self.connected_to is not None:
+            with open(os.path.join("logs", "hardware.log"), "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
         super().delete()
 
     def on_drag_motion(self, event):
@@ -89,8 +106,12 @@ class USBSpeaker(BaseComponent):
             self.plug_x = event.x
             self.plug_y = event.y
             if self.connected_to is not None:
-                self.connected_to = None
-                with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
+                cm = getattr(self.app, 'connection_manager', None)
+                if cm:
+                    cm.disconnect(self)
+                else:
+                    self.connected_to = None
+                    with open(os.path.join("logs", "hardware.log"), "a") as f: f.write("Mini USB 2.0 external speaker is disconnected from USB 2.0 Port\n")
         else:
             # Dragging Speaker Body
             dx = event.x - self.drag_x
@@ -109,18 +130,10 @@ class USBSpeaker(BaseComponent):
     def on_drag_stop(self, event):
         item = self.canvas.find_withtag("current")
         if item and self.plug_tag in self.canvas.gettags(item[0]):
-            # Snap plug to RPi USB
-            for comp in self.app.components:
-                if isinstance(comp, RaspberryPi):
-                    threshold = 40 * getattr(self.app, 'zoom_factor', 1.0)
-                    if math.hypot(self.plug_x - comp.usb2_x, self.plug_y - comp.usb2_y) < threshold:
-                        dx = comp.usb2_x - self.plug_x
-                        dy = comp.usb2_y - self.plug_y
-                        self.canvas.move(self.plug_tag, dx, dy)
-                        self.plug_x += dx; self.plug_y += dy
-                        if self.connected_to != comp:
-                            self.connected_to = comp
-                            with open("hardware.log", "a") as f: f.write("Mini USB 2.0 external speaker is connected to USB 2.0 Port\n")
-                        break
+            cm = getattr(self.app, 'connection_manager', None)
+            if cm:
+                cm.try_connect(self, self.app.components,
+                               snap_threshold=40,
+                               zoom=getattr(self.app, 'zoom_factor', 1.0))
             self.update_cable()
 

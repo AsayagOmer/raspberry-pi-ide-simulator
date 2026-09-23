@@ -40,7 +40,7 @@ class HardwareAPI:
     def play_audio(self, filepath):
         spk = self._find_active_speaker()
         if not spk:
-            self.app.after(0, lambda: self.app.log_console("ERROR: Playback failed. No USB Speaker connected to RPi!"))
+            self.app.after(0, lambda: self.app.log_console("ERROR: Playback failed. No USB Speaker plugged into RPi!"))
             return False
         if os.path.exists(filepath):
             pygame.mixer.music.load(filepath)
@@ -55,7 +55,7 @@ class HardwareAPI:
     def record_audio(self, filepath, duration=3, fs=44100):
         pa = self._find_active_pirate_audio()
         if not pa:
-            self.app.after(0, lambda: self.app.log_console("ERROR: Recording failed. Pirate Audio (Mic) not connected to RPi!"))
+            self.app.after(0, lambda: self.app.log_console("ERROR: Recording failed. Pirate Audio (Mic) not plugged into RPi!"))
             return False
         if not RECORDING_ENABLED:
             self.app.after(0, lambda: self.app.log_console("ERROR: Sounddevice library not installed."))

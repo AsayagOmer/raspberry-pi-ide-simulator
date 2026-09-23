@@ -1,7 +1,6 @@
+import os
 import tkinter as tk
-import math
 from .base_component import BaseComponent
-from .raspberry_pi import RaspberryPi
 from . import register_component
 
 @register_component("Pirate Audio (Mic)", color="#1a1a1a")
@@ -80,9 +79,27 @@ class PirateAudio(BaseComponent):
         gx, gy = self._rot_pt(145, self.h)
         self.socket_x, self.socket_y = self.x + gx, self.y + gy
 
+    def get_ports(self):
+        return [
+            {"name": "gpio_socket", "direction": "out", "x": self.socket_x, "y": self.socket_y},
+        ]
+
+    def snap_port_to(self, port_name, target_x, target_y):
+        """Move the whole board so the GPIO socket is at (target_x, target_y)."""
+        if port_name == "gpio_socket":
+            dx = target_x - self.socket_x
+            dy = target_y - self.socket_y
+            self.canvas.move(self.tag, dx, dy)
+            self.x += dx
+            self.y += dy
+            self.update_ports()  # recalculate so socket_x/y == target exactly
+
     def delete(self):
-        if self.connected_to is not None:
-            with open("hardware.log", "a") as f: f.write("Pirate Audio is disconnected from GPIO Header\n")
+        cm = getattr(self.app, 'connection_manager', None)
+        if cm:
+            cm.disconnect(self)
+        elif self.connected_to is not None:
+            with open(os.path.join("logs", "hardware.log"), "a") as f: f.write("Pirate Audio is disconnected from GPIO Header\n")
         super().delete()
 
     def _add_btn(self, bx, by, key):
@@ -114,21 +131,16 @@ class PirateAudio(BaseComponent):
         super().on_drag_motion(event)
         self.update_ports()
         if self.connected_to is not None:
-            self.connected_to = None
-            with open("hardware.log", "a") as f: f.write("Pirate Audio is disconnected from GPIO Header\n")
+            cm = getattr(self.app, 'connection_manager', None)
+            if cm:
+                cm.disconnect(self)
+            else:
+                self.connected_to = None
+                with open(os.path.join("logs", "hardware.log"), "a") as f: f.write("Pirate Audio is disconnected from GPIO Header\n")
 
     def on_drag_stop(self, event):
-        # Snap to RPi GPIO
-        for comp in self.app.components:
-            if isinstance(comp, RaspberryPi):
-                threshold = 40 * getattr(self.app, 'zoom_factor', 1.0)
-                if math.hypot(self.socket_x - comp.gpio_x, self.socket_y - comp.gpio_y) < threshold:
-                    dx = comp.gpio_x - self.socket_x
-                    dy = comp.gpio_y - self.socket_y
-                    self.canvas.move(self.tag, dx, dy)
-                    self.x += dx; self.y += dy
-                    self.socket_x += dx; self.socket_y += dy
-                    if self.connected_to != comp:
-                        self.connected_to = comp
-                        with open("hardware.log", "a") as f: f.write("Pirate Audio is connected to GPIO Header\n")
-                    break
+        cm = getattr(self.app, 'connection_manager', None)
+        if cm:
+            cm.try_connect(self, self.app.components,
+                           snap_threshold=40,
+                           zoom=getattr(self.app, 'zoom_factor', 1.0))

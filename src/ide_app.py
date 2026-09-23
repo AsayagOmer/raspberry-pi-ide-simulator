@@ -3,10 +3,9 @@ from tkinter import ttk, filedialog
 import pygame
 import threading
 import re
-import math
 
 from components import COMPONENT_REGISTRY
-from components.raspberry_pi import RaspberryPi
+from components.connection import ConnectionManager
 from hardware_api import HardwareAPI
 
 class IDEApp(tk.Tk):
@@ -24,6 +23,7 @@ class IDEApp(tk.Tk):
         self.history_index = -1
         self.copied_component = None
         self.zoom_factor = 1.0
+        self.connection_manager = ConnectionManager()
 
         pygame.mixer.init()
 
@@ -33,9 +33,10 @@ class IDEApp(tk.Tk):
         self.save_hardware_state()
 
     def log_event(self, text):
-        import datetime
+        import datetime, os
+        os.makedirs("logs", exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open("event.log", "a") as f:
+        with open(os.path.join("logs", "event.log"), "a") as f:
             f.write(f"[{timestamp}] {text}\n")
 
     def save_hardware_state(self):
@@ -57,6 +58,7 @@ class IDEApp(tk.Tk):
         self.hardware_history.append(state)
 
     def load_hardware_state(self, state):
+        self.connection_manager.clear_all()
         for c in list(self.components):
             c.connected_to = None # Prevent disconnect logs during load
             c.delete()
@@ -78,19 +80,9 @@ class IDEApp(tk.Tk):
                         c.update_cable()
                 self.components.append(c)
                 
-        # Silently re-establish connections based on distances
-        threshold = 40 * self.zoom_factor
-        for c in self.components:
-            if getattr(c, 'socket_x', None) is not None:
-                for comp in self.components:
-                    if isinstance(comp, RaspberryPi) and math.hypot(c.socket_x - comp.gpio_x, c.socket_y - comp.gpio_y) < threshold:
-                        c.connected_to = comp
-                        break
-            if getattr(c, 'plug_x', None) is not None:
-                for comp in self.components:
-                    if isinstance(comp, RaspberryPi) and math.hypot(c.plug_x - comp.usb2_x, c.plug_y - comp.usb2_y) < threshold:
-                        c.connected_to = comp
-                        break
+        # Silently re-establish connections via ConnectionManager
+        self.connection_manager.reconnect_by_position(
+            self.components, threshold=40 * self.zoom_factor)
 
     def hw_undo(self, event=None):
         if isinstance(self.focus_get(), tk.Text): return
@@ -342,9 +334,9 @@ hardware.display_text("Testing Hardware...", color="cyan")
 
 print("1. Testing Audio Output...")
 if hardware.play_audio("C:/Windows/Media/tada.wav"):
-    print("Success: Speaker is connected and played sound!")
+    print("Success: Speaker is attached and played sound!")
 else:
-    print("Failed: Please connect the USB Speaker to the Pi!")
+    print("Failed: Please attach the USB Speaker to the Pi!")
 
 time.sleep(2)
 

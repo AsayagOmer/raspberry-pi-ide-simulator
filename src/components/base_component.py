@@ -10,6 +10,24 @@ class BaseComponent:
 
     def draw(self): pass
 
+    def get_ports(self):
+        """Return a list of port definitions for this component.
+
+        Each port is a dict with keys:
+          name      – unique port identifier (e.g. "gpio_header")
+          direction – "in" (accepts connections) or "out" (initiates connections)
+          x, y      – current canvas position of the port
+        Override in subclasses.
+        """
+        return []
+
+    def snap_port_to(self, port_name, target_x, target_y):
+        """Move the component so that *port_name* is at (target_x, target_y).
+
+        Override in subclasses to implement port-specific snap behavior.
+        """
+        pass
+
     def redraw(self):
         for item in self.items:
             self.canvas.delete(item)

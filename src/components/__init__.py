@@ -17,7 +17,7 @@ def register_component(name, color="#555555"):
 _components_dir = os.path.dirname(__file__)
 for _file in glob.glob(os.path.join(_components_dir, "*.py")):
     _basename = os.path.basename(_file)
-    if _basename.startswith("__") or _basename == "base_component.py":
+    if _basename.startswith("__") or _basename in ("base_component.py", "connection.py"):
         continue
     _module_name = _basename[:-3]
     importlib.import_module(f"components.{_module_name}")
