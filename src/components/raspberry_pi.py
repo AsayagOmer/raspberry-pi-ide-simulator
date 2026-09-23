@@ -159,15 +159,16 @@ class RaspberryPi(BaseComponent):
         self.update_ports()
 
     def update_ports(self):
+        z = self._get_z()
         # GPIO connection point: center of the GPIO header
         gx, gy = self._rot_pt(175, 8)
-        self.gpio_x, self.gpio_y = self.x + gx, self.y + gy
+        self.gpio_x, self.gpio_y = self.x + gx * z, self.y + gy * z
         # USB 3.0 connection point: center of USB 3.0 block
         u3x, u3y = self._rot_pt(402, 115)
-        self.usb3_x, self.usb3_y = self.x + u3x, self.y + u3y
+        self.usb3_x, self.usb3_y = self.x + u3x * z, self.y + u3y * z
         # USB 2.0 connection point: center of USB 2.0 block
         u2x, u2y = self._rot_pt(402, 190)
-        self.usb2_x, self.usb2_y = self.x + u2x, self.y + u2y
+        self.usb2_x, self.usb2_y = self.x + u2x * z, self.y + u2y * z
 
     def get_ports(self):
         return [
@@ -179,3 +180,20 @@ class RaspberryPi(BaseComponent):
     def on_drag_motion(self, event):
         super().on_drag_motion(event)
         self.update_ports()
+        cm = getattr(self.app, 'connection_manager', None)
+        if cm:
+            for conn in cm.find_connections_for(self):
+                if conn.target is self:
+                    t_port_pos = conn.get_target_pos()
+                    if t_port_pos:
+                        conn.source.snap_port_to(conn.source_port, t_port_pos[0], t_port_pos[1])
+
+    def rotate(self, event=None):
+        super().rotate(event)
+        cm = getattr(self.app, 'connection_manager', None)
+        if cm:
+            for conn in cm.find_connections_for(self):
+                if conn.target is self:
+                    t_port_pos = conn.get_target_pos()
+                    if t_port_pos:
+                        conn.source.snap_port_to(conn.source_port, t_port_pos[0], t_port_pos[1])

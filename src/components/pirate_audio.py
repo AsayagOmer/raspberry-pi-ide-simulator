@@ -77,7 +77,8 @@ class PirateAudio(BaseComponent):
 
     def update_ports(self):
         gx, gy = self._rot_pt(145, self.h)
-        self.socket_x, self.socket_y = self.x + gx, self.y + gy
+        z = self._get_z()
+        self.socket_x, self.socket_y = self.x + gx * z, self.y + gy * z
 
     def get_ports(self):
         return [
@@ -144,3 +145,14 @@ class PirateAudio(BaseComponent):
             cm.try_connect(self, self.app.components,
                            snap_threshold=40,
                            zoom=getattr(self.app, 'zoom_factor', 1.0))
+                           
+    def rotate(self, event=None):
+        super().rotate(event)
+        self.update_ports()
+        if self.connected_to is not None:
+            cm = getattr(self.app, 'connection_manager', None)
+            if cm:
+                cm.disconnect(self)
+            else:
+                self.connected_to = None
+                with open(os.path.join("logs", "hardware.log"), "a") as f: f.write("Pirate Audio is disconnected from GPIO Header\n")

@@ -343,7 +343,7 @@ class TestHardwareLogging(unittest.TestCase):
         self._connect_pa()
         with patch("builtins.open", mock_open()) as m:
             self.cm.try_connect(self.pa, self.app.components, zoom=1.0)
-        m.assert_called_with("hardware.log", "a")
+        m.assert_called_with(os.path.join("logs", "hardware.log"), "a")
         m().write.assert_called_with("Pirate Audio is connected to GPIO Header\n")
 
     def test_disconnect_logs_to_hardware_log(self):
@@ -352,7 +352,7 @@ class TestHardwareLogging(unittest.TestCase):
             self.cm.try_connect(self.pa, self.app.components, zoom=1.0)
         with patch("builtins.open", mock_open()) as m:
             self.cm.disconnect(self.pa)
-        m.assert_called_with("hardware.log", "a")
+        m.assert_called_with(os.path.join("logs", "hardware.log"), "a")
         m().write.assert_called_with("Pirate Audio is disconnected from GPIO Header\n")
 
     def test_speaker_connect_log(self):
