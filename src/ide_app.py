@@ -456,8 +456,43 @@ else:
         api = HardwareAPI(self)
         
         def execute():
-            import io, sys
+            import io, sys, ast, subprocess, os
             from contextlib import redirect_stdout
+            
+            # --- Auto-Install Isolated Dependencies ---
+            third_party = []
+            try:
+                tree = ast.parse(code)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import):
+                        for n in node.names:
+                            third_party.append(n.name.split('.')[0])
+                    elif isinstance(node, ast.ImportFrom):
+                        if node.module:
+                            third_party.append(node.module.split('.')[0])
+                
+                # Filter out stdlib and the injected 'hardware' object
+                third_party = list(set([m for m in third_party if m not in sys.stdlib_module_names and m != 'hardware']))
+            except Exception:
+                pass
+                
+            if third_party:
+                deps_dir = os.path.join(os.getcwd(), '.sim_env')
+                os.makedirs(deps_dir, exist_ok=True)
+                if deps_dir not in sys.path:
+                    sys.path.insert(0, deps_dir)
+                    
+                self.after(0, lambda: self.log_console(f"Setting up isolated environment for: {', '.join(third_party)}..."))
+                try:
+                    subprocess.run(
+                        ["uv", "pip", "install", "--target", deps_dir] + third_party,
+                        check=True, capture_output=True, text=True
+                    )
+                    self.after(0, lambda: self.log_console("Isolated environment ready!"))
+                except subprocess.CalledProcessError as e:
+                    self.after(0, lambda err=e.stderr: self.log_console(f"Warning: Some packages couldn't be installed:\n{err}"))
+            # ----------------------------------------
+            
             redirected_output = io.StringIO()
             try:
                 with redirect_stdout(redirected_output):
