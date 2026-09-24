@@ -13,3 +13,8 @@ reminder.md
 
 # Manual checks
 elderly_assistant_sim.py
+# Simulator Isolated Environment
+.sim_env/
+
+# Tests (Not included in repo)
+tests/
