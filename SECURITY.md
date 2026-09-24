@@ -4,10 +4,10 @@
 
 Currently, only the latest version of the **Raspberry Pi IDE Simulator** on the `master` branch is supported with security updates.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| Latest  | :white_check_mark: |
-| Older   | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| Latest  | ✅        |
+| Older   | ❌        |
 
 ## Reporting a Vulnerability
 
