@@ -1,6 +1,6 @@
 import tkinter as tk
 from components import COMPONENT_REGISTRY
-from logger import log_event
+from core.logger import log_event
 
 class HardwareWorkspace:
     """Manages the visual hardware canvas, components drag-and-drop, zoom, and history."""

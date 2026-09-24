@@ -55,13 +55,13 @@ The application window opens with two panes:
 
 ## Getting Started
 
-A concise step‑by‑step tutorial is available in the [Getting‑Started guide](Getting-Started.md).
+A concise step‑by‑step tutorial is available in the [Getting‑Started guide](docs/Getting-Started.md).
 
 ## API Reference
 
-- [`HardwareAPI`](hardware_api.md) – functions for audio I/O, display, and sensor simulation
-- [`components`](components.md) – base classes for visual devices
-- [`IDEApp`](IDEApp.md) – main application class handling layout and execution
+- [`HardwareAPI`](docs/hardware_api.md) – functions for audio I/O, display, and sensor simulation
+- [`components`](docs/components.md) – base classes for visual devices
+- [`IDEApp`](docs/IDEApp.md) – main application class handling layout and execution
 
 See the individual markdown files for detailed signatures and usage examples.
 

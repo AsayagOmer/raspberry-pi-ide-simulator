@@ -5,7 +5,7 @@ import pathlib
 # Ensure the 'src' package is resolvable so running from here works exactly like running inside src
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent / "src"))
 
-from ide_app import IDEApp
+from ui.ide_app import IDEApp
 
 def main():
     app = IDEApp()

@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 import pygame
 
-from hardware_workspace import HardwareWorkspace
-from code_editor import CodeEditor
-from logger import log_event
+from ui.hardware_workspace import HardwareWorkspace
+from ui.code_editor import CodeEditor
+from core.logger import log_event
 
 class IDEApp(tk.Tk):
     """Main Application coordinating the Hardware Workspace and Code Editor."""
@@ -26,7 +26,7 @@ class IDEApp(tk.Tk):
         self.workspace.save_state()
 
     def _subscribe_events(self):
-        from event_bus import EventBus
+        from core.event_bus import EventBus
         EventBus.subscribe("LOG_CONSOLE", lambda text: self.after(0, lambda: self.log_console(text)))
         EventBus.subscribe("UPDATE_CANVAS_TEXT", lambda item, text, color: self.after(0, lambda: self.workspace.app.canvas.itemconfig(item, text=text, fill=color)))
 

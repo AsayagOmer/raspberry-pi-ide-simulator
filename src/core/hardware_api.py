@@ -4,7 +4,7 @@ import pygame
 from components.raspberry_pi import RaspberryPi
 from components.pirate_audio import PirateAudio
 from components.usb_speaker import USBSpeaker
-from event_bus import EventBus
+from core.event_bus import EventBus
 
 try:
     import sounddevice as sd

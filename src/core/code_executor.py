@@ -5,8 +5,8 @@ import subprocess
 import os
 import threading
 from contextlib import redirect_stdout
-from hardware_api import HardwareAPI
-from logger import log_event
+from core.hardware_api import HardwareAPI
+from core.logger import log_event
 
 class CodeExecutor:
     """Handles parsing, dependency installation, and thread-safe execution of user code."""

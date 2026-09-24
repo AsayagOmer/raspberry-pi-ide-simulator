@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 import re
 import pygame
-from logger import log_event
-from code_executor import CodeExecutor
+from core.logger import log_event
+from core.code_executor import CodeExecutor
 
 class CodeEditor:
     """Manages the multi-tab code editor, syntax highlighting, file IO, and console."""
