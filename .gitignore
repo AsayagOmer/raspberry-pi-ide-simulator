@@ -18,3 +18,6 @@ elderly_assistant_sim.py
 
 # Tests (Not included in repo)
 tests/
+
+# Examples
+examples/
