@@ -20,9 +20,15 @@ class IDEApp(tk.Tk):
 
         self._setup_styles()
         self._setup_ui()
+        self._subscribe_events()
         
         log_event("IDE started with a clear board.")
         self.workspace.save_state()
+
+    def _subscribe_events(self):
+        from event_bus import EventBus
+        EventBus.subscribe("LOG_CONSOLE", lambda text: self.after(0, lambda: self.log_console(text)))
+        EventBus.subscribe("UPDATE_CANVAS_TEXT", lambda item, text, color: self.after(0, lambda: self.workspace.app.canvas.itemconfig(item, text=text, fill=color)))
 
     def _setup_styles(self):
         style = ttk.Style()
