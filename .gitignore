@@ -10,3 +10,6 @@ reminder.md
 # Generated logs and media
 *.log
 *.wav
+
+# Manual checks
+elderly_assistant_sim.py
