@@ -59,7 +59,11 @@ class CodeEditor:
             return "break"
             
         editor.bind("<Control-z>", safe_undo)
+        editor.bind("<Control-Z>", safe_undo)
         editor.bind("<Control-y>", safe_redo)
+        editor.bind("<Control-Y>", safe_redo)
+        editor.bind("<Control-Shift-Z>", safe_redo)
+        editor.bind("<Control-Shift-z>", safe_redo)
         def safe_copy(e):
             e.widget.event_generate("<<Copy>>")
             return "break"
