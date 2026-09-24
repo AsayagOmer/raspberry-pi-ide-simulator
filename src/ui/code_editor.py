@@ -60,9 +60,21 @@ class CodeEditor:
             
         editor.bind("<Control-z>", safe_undo)
         editor.bind("<Control-y>", safe_redo)
-        editor.bind("<Control-c>", lambda e: e.widget.event_generate("<<Copy>>"))
-        editor.bind("<Control-x>", lambda e: e.widget.event_generate("<<Cut>>"))
-        editor.bind("<Control-v>", lambda e: e.widget.event_generate("<<Paste>>"))
+        def safe_copy(e):
+            e.widget.event_generate("<<Copy>>")
+            return "break"
+            
+        def safe_cut(e):
+            e.widget.event_generate("<<Cut>>")
+            return "break"
+            
+        def safe_paste(e):
+            e.widget.event_generate("<<Paste>>")
+            return "break"
+
+        editor.bind("<Control-c>", safe_copy)
+        editor.bind("<Control-x>", safe_cut)
+        editor.bind("<Control-v>", safe_paste)
         editor.bind("<KeyRelease>", lambda e: self.highlight_syntax(editor))
         
         editor.tag_configure("keyword", foreground="#569cd6")
