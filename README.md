@@ -1,40 +1,82 @@
-# Professional Raspberry Pi IDE Simulator
+# Raspberry Pi IDE Simulator
 
-Welcome to the Professional IDE Simulator for Raspberry Pi! This application provides a seamless, interactive virtual workspace to develop, test, and debug Python scripts meant for Raspberry Pi hardware setups.
+![Demo GIF](https://raw.githubusercontent.com/AsayagOmer/raspberry-pi-ide-simulator/main/docs/demo.gif)
 
-## 🚀 Key Features
+## Overview
 
-*   **Interactive Visual Hardware Workspace:** Drag and drop components around the canvas. Components realistically "snap" onto appropriate ports (e.g., Pirate Audio snaps onto the Pi's GPIO header, USB Speaker cable snaps into the Pi's USB port).
-*   **Split-Pane Interface with Tabs:** 
-    *   **Code Editor:** Supports multiple open script tabs. Features syntax highlighting (VSCode dark theme colors) and **Ctrl+Z (Undo) / Ctrl+Y (Redo)** support.
-    *   **Component Palette:** A dedicated tab allowing you to spawn additional hardware components into the workspace.
-*   **Role-Specific Hardware Audio:**
-    *   **Pirate Audio HAT (Microphone):** The HAT has been configured to act as your audio input device. It will record actual audio from your computer's microphone if properly attached to the Pi's GPIO header.
-    *   **Mini USB Speaker (Playback):** Strictly acts as the audio output device. It will only play back `.wav` or `.mp3` files if its USB cable is plugged into the Pi.
-*   **Thread-Safe Execution Engine:** When you click "Run Code", your script is executed in a background thread. `sys.stdout` is carefully redirected using `contextlib` so your `print()` statements stream directly into the IDE Console without freezing the GUI.
+The **Raspberry Pi IDE Simulator** provides a full‑featured, graphical development environment that mimics a Raspberry Pi hardware setup.  It lets you drag‑and‑drop common peripherals (Pirate Audio HAT, USB speaker, etc.) onto a virtual Pi, write Python scripts, and execute them in a thread‑safe sandbox.  The simulator is ideal for learning, prototyping, and testing code that interacts with hardware without needing a physical device.
 
-## 🧠 Code Architecture & Design
+## Features
 
-The codebase (`professional_ide.py`) has been refactored into a scalable Object-Oriented design to ensure maintainability and readability.
+- Interactive visual workspace with snap‑to‑port behaviour
+- Multi‑tab code editor with syntax highlighting
+- Real‑time console output and error handling
+- Thread‑safe `HardwareAPI` injected into user scripts
+- Built‑in audio recording/playback emulation
+- Extensible component architecture (add new devices easily)
 
-### 1. `BaseComponent` Class
-The foundation of the visual workspace. It encapsulates common logic for rendering, tracking coordinates, and handling `tkinter` drag-and-drop mouse events (`<ButtonPress-1>`, `<B1-Motion>`). Every physical device inherits from this class.
+## Recent Improvements
 
-### 2. Hardware Implementations
-*   `RaspberryPi(BaseComponent)`: Defines the main board, establishing the physical coordinates for the `gpio_x, gpio_y` and `usb_x, usb_y` connection ports.
-*   `PirateAudio(BaseComponent)`: Includes interactive UI buttons (`A, B, X, Y`) and an LCD screen. Its drag release event calculates the euclidean distance (`math.hypot`) to any Raspberry Pi on the canvas. If within the threshold, it snaps to the GPIO header.
-*   `USBSpeaker(BaseComponent)`: A complex component that separates the drag logic of its "Body" from its "USB Plug". Dragging the plug recalculates a Bezier curve to visually stretch the cable, snapping only to valid USB ports.
+| # | Area | What was changed | Why it matters (new behavior) |
+|---|------|------------------|--------------------------------|
+| 1 | **Audio playback (`play_audio`)** | • Removed the *project‑root* whitelist check.<br>• Added a full‑path resolution (`os.path.abspath`).<br>• Wrapped `pygame` calls in a `try/except` block.<br>• Updated docstring to state **no path‑restriction**. | Allows any existing audio file (e.g., `C:/Windows/Media/tada.wav`) to be played, fixing the “outside the allowed directory” error. Errors during playback are now reported clearly. |
+| 2 | **User feedback** | • Added explicit log messages for successful playback (`Playing audio: …`) and for any exception (`ERROR: Playback failed – …`). | Gives immediate, informative console output so you know exactly what succeeded or why it failed. |
+| 3 | **Container launch script (`run_simulator.ps1`)** | • Automates WSL 2, Docker‑engine installation, image build, and container run.<br>• Mounts the project read‑only (`-v "${PWD}:/app:ro"`).<br>• Forwards the X server (`DISPLAY`).<br>• **Exposes the host audio device** (`--device /dev/snd`). | Provides a **single‑command** way to start the simulator without Docker Desktop. Audio recording now works because the container can access the host’s sound device. |
+| 4 | **Isolation model** | • The container runs as a non‑root user (`appuser`).<br>• Only the project folder, the X server, and the audio device are exposed.<br>• Network can be disabled (`--network none`) if desired. | Keeps the simulator sandboxed from the rest of the Windows system while still permitting required GUI and audio functionality. |
+| 5 | **Error handling for missing files** | • When the file does not exist, the method now logs `ERROR: Audio file '…' not found.` instead of silently failing. | Makes it easy to spot typos or missing assets during demos. |
+| 6 | **Documentation comment** | Updated the method’s docstring to reflect the new unrestricted behavior. | Future developers (or you) will see the intended policy directly in the source. |
 
-### 3. `IDEApp` Class
-Inherits from `tk.Tk` and orchestrates the layout using `ttk.PanedWindow` and `ttk.Notebook`. It maintains a list of instantiated `components` and maps `tab_ids` to their respective `tk.Text` editors.
+## Installation
 
-### 4. `HardwareAPI` Class
-An abstraction layer injected dynamically into the user's script environment during execution. 
-*   **State Checking:** Before playing or recording audio, it queries the IDE state to find if `isinstance(comp.connected_to, RaspberryPi)` is True for the required component.
-*   **Thread-Safety:** All visual updates requested by the user's script (like `hardware.display_text`) are wrapped in `self.app.after(0, ...)` to ensure Tkinter's main loop safely handles the GUI update across thread boundaries.
+```bash
+# Clone the repository
+git clone https://github.com/AsayagOmer/raspberry-pi-ide-simulator.git
+cd raspberry-pi-ide-simulator
 
-## 📝 Getting Started
-1. Run `python professional_ide.py`.
-2. Ensure the **Pirate Audio HAT** is dragged directly onto the top edge (GPIO Header) of the Raspberry Pi.
-3. Ensure the **USB Speaker's blue plug** is dragged onto the right edge (USB Port) of the Raspberry Pi.
-4. Open the **Code Editor** tab and click **▶ Run Active Code**.
+# Create a virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate   # on Windows use `.venv\Scripts\activate`
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+> **Note** – The project requires Python 3.10+ and the `tkinter` package (included with most Python installations).
+
+## Launching the IDE
+
+```bash
+python professional_ide.py
+```
+
+The application window opens with two panes:
+- **Component Palette** – drag components onto the canvas
+- **Code Editor** – write or open Python files, then click **▶ Run Active Code**
+
+## Getting Started
+
+A concise step‑by‑step tutorial is available in the [Getting‑Started guide](Getting-Started.md).
+
+## API Reference
+
+- [`HardwareAPI`](hardware_api.md) – functions for audio I/O, display, and sensor simulation
+- [`components`](components.md) – base classes for visual devices
+- [`IDEApp`](IDEApp.md) – main application class handling layout and execution
+
+See the individual markdown files for detailed signatures and usage examples.
+
+## License & Citation
+
+The project is released under the **MIT License** (see [LICENSE.md](LICENSE.md)).
+
+If you use the simulator in academic work, please cite it as:
+
+```
+@software{Omer2026RaspberryPiIDE,
+  author = {Asayag, Omer},
+  title = {Raspberry Pi IDE Simulator},
+  year = {2026},
+  url = {https://github.com/AsayagOmer/raspberry-pi-ide-simulator},
+  license = {MIT}
+}
+```

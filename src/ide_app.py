@@ -496,7 +496,13 @@ else:
             redirected_output = io.StringIO()
             try:
                 with redirect_stdout(redirected_output):
-                    exec(code, {}, {'hardware': api, 'time': __import__('time')})
+                    # Allow any imports by using the default builtins dictionary
+                    safe_globals = {
+                        "__builtins__": __builtins__,
+                        "hardware": api,
+                        "time": __import__("time"),
+                    }
+                    exec(code, safe_globals, {})
             except Exception as e:
                 self.after(0, lambda err=e: self.log_console(f"Error: {err}"))
                 self.after(0, lambda err=e: self.log_event(f"Code execution error: {err}"))

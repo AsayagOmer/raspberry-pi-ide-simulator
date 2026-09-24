@@ -38,16 +38,27 @@ class HardwareAPI:
         return self.app.button_states.get(btn, False)
         
     def play_audio(self, filepath):
+        """Play an audio file. No path‑restriction – useful for demos.
+
+        The method still verifies that a USB speaker is attached in the GUI.
+        """
         spk = self._find_active_speaker()
         if not spk:
             self.app.after(0, lambda: self.app.log_console("ERROR: Playback failed. No USB Speaker plugged into RPi!"))
             return False
-        if os.path.exists(filepath):
-            pygame.mixer.music.load(filepath)
-            pygame.mixer.music.play()
-            self.app.after(0, lambda p=filepath: self.app.log_console(f"Playing audio: {p}"))
-            while pygame.mixer.music.get_busy(): time.sleep(0.1)
-            return True
+        # Resolve the given path (absolute or relative) – no security check.
+        target_path = os.path.abspath(filepath)
+        if os.path.exists(target_path):
+            try:
+                pygame.mixer.music.load(target_path)
+                pygame.mixer.music.play()
+                self.app.after(0, lambda p=target_path: self.app.log_console(f"Playing audio: {p}"))
+                while pygame.mixer.music.get_busy():
+                    time.sleep(0.1)
+                return True
+            except Exception as e:
+                self.app.after(0, lambda err=e: self.app.log_console(f"ERROR: Playback failed – {err}"))
+                return False
         else:
             self.app.after(0, lambda p=filepath: self.app.log_console(f"ERROR: Audio file '{p}' not found."))
             return False

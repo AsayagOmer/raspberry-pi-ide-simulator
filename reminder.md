@@ -1,5 +1,5 @@
 
-## YOU MUST READ ME BEFORE EACH TASK!
+## YOU MUST READ ME BEFORE EACH TASK
 
 ### User Interface
 
@@ -32,9 +32,14 @@ How the GUI is. It follows these notes:
 * Any device that connected or disconnected, will write to the hardware log file (the format: <device_name> is connected/disconnected <what_port>); Only in the log file, we're informed connected/disconnected. __Make sure that only in that log file.__
 * Any major event in the UI and major logic event should be written to event log file.
 
+### Tests
+
+* Not included in the GitHub repository.
+
 ### Notes
 
 * Push to GitHub after any significant change.
+* Do not push to GitHub any personal information (such as: IPs, API keys, environment files, etc.)
 * Make sure the gitignore file is up to the date, including only necessary file to run.
 
 ---
