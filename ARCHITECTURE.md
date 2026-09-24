@@ -34,33 +34,33 @@ Hardware components shouldn't be hardcoded into the core IDE. We use a microkern
 
 ```mermaid
 flowchart TD
-    subgraph IDE_Process [Main IDE Process (Microkernel & MVC)]
+    subgraph IDE_Process ["Main IDE Process (Microkernel & MVC)"]
         direction TB
-        UI[Tkinter Views\n(Canvas, Code Tabs)]
-        Ctrl[Controllers\n(Workspace, Editor)]
-        State[(Hardware State Models)]
+        UI["Tkinter Views (Canvas, Code Tabs)"]
+        Ctrl["Controllers (Workspace, Editor)"]
+        State[("Hardware State Models")]
         
-        UI <-->|User Input / Render| Ctrl
-        Ctrl <-->|Update / Read| State
+        UI <-->|"User Input / Render"| Ctrl
+        Ctrl <-->|"Update / Read"| State
         
-        PluginLoader[Plugin Registry] -.->|Dynamically Injects| UI
+        PluginLoader["Plugin Registry"] -.->|"Dynamically Injects"| UI
     end
 
-    subgraph Event_System [Event Broker]
-        EB((Event Bus\nPub/Sub))
+    subgraph Event_System ["Event Broker"]
+        EB(("Event Bus (Pub/Sub)"))
     end
 
-    subgraph Execution_Engine [Code Executor Thread]
+    subgraph Execution_Engine ["Code Executor Thread"]
         direction TB
-        Runner[Execution Sandbox]
-        UserCode(User's Python Script)
-        HwAPI[Hardware API Proxy]
+        Runner["Execution Sandbox"]
+        UserCode("User's Python Script")
+        HwAPI["Hardware API Proxy"]
         
-        Runner -->|Parses & Runs| UserCode
-        UserCode <-->|Calls hardware.*| HwAPI
+        Runner -->|"Parses & Runs"| UserCode
+        UserCode <-->|"Calls hardware.*"| HwAPI
     end
 
     %% Connections
-    Ctrl <-->|Subscribes to Events| EB
-    HwAPI <-->|Publishes Events| EB
+    Ctrl <-->|"Subscribes to Events"| EB
+    HwAPI <-->|"Publishes Events"| EB
 ```
