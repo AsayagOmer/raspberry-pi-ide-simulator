@@ -31,7 +31,7 @@ class CodeEditor:
         self.file_notebook = ttk.Notebook(self.code_tab)
         self.file_notebook.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        default_code = '''# Professional Raspberry Pi IDE\nimport time\n\nhardware.clear_screen()\nhardware.display_text("Testing Hardware...", color="cyan")\n\nprint("1. Testing Audio Output...")\nif hardware.play_audio("C:/Windows/Media/tada.wav"):\n    print("Success: Speaker is attached and played sound!")\nelse:\n    print("Failed: Please attach the USB Speaker to the Pi!")\n\ntime.sleep(2)\n\nprint("\\n2. Testing Microphone Input...")\nif hardware.record_audio("test_mic.wav", duration=3):\n    print("Success: Audio recorded via Pirate Audio Mic!")\n    print("Playing it back...")\n    hardware.play_audio("test_mic.wav")\nelse:\n    print("Failed: Please snap the Pirate Audio onto the RPi GPIO Header!")\n'''
+        default_code = '''# Professional Raspberry Pi IDE\nimport time\nimport wave\nimport math\nimport struct\nimport os\n\nBEEP_FILE = os.path.abspath("beep.wav")\nMIC_FILE = os.path.abspath("test_mic.wav")\n\ndef create_beep(filename=BEEP_FILE):\n    with wave.open(filename, "w") as f:\n        f.setnchannels(1)\n        f.setsampwidth(2)\n        f.setframerate(44100)\n        for i in range(44100):\n            val = int(10000.0 * math.sin(2.0 * math.pi * 440.0 * (i / 44100.0)))\n            f.writeframesraw(struct.pack("<h", val))\n\ncreate_beep()\nhardware.clear_screen()\nhardware.display_text("Testing Hardware...", color="cyan")\n\nprint("1. Testing Audio Output...")\nif hardware.play_audio(BEEP_FILE):\n    print("Success: Speaker is attached and played sound!")\nelse:\n    print("Failed: Please attach the USB Speaker to the Pi!")\n\ntime.sleep(2)\n\nprint("\\n2. Testing Microphone Input...")\nif hardware.record_audio(MIC_FILE, duration=3):\n    print("Success: Audio recorded via Pirate Audio Mic!")\n    print("Playing it back...")\n    hardware.play_audio(MIC_FILE)\nelse:\n    print("Failed: Please snap the Pirate Audio onto the RPi GPIO Header!")\n'''
         self.add_file_tab("main.py", default_code)
 
         tk.Label(self.code_tab, text="Console Output", font=("Segoe UI", 10, "bold"), bg="#2b2b2b", fg="#aaa").pack(anchor=tk.W)
@@ -138,13 +138,21 @@ class CodeEditor:
         self.console.config(state=tk.DISABLED)
 
     def stop_audio(self):
+        self.executor.stop()
         pygame.mixer.music.stop()
-        self.log_console("Audio stopped.")
-        log_event("Audio playback stopped manually.")
+        self.log_console("--- Execution & Audio Stopped by User ---")
+        log_event("Execution and audio playback stopped manually.")
 
     def run_code(self):
         current_tab_id = self.file_notebook.select()
         if not current_tab_id: return
         code = self.editors[current_tab_id].get("1.0", tk.END)
         tab_name = self.file_notebook.tab(current_tab_id, 'text')
-        self.executor.run(code, tab_name)
+        
+        rpis = [c for c in self.app.components if c.__class__.__name__ == "RaspberryPi"]
+        if not rpis:
+            self.log_console("ERROR: No Raspberry Pi found on the workspace!")
+            return
+            
+        for rpi in rpis:
+            self.executor.run(code, tab_name, rpi)

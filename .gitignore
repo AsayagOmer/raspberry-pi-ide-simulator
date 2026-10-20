@@ -4,17 +4,23 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Personal reminder
+# Personal reminder & local environment
 reminder.md
+.env
 
 # Generated logs and media
 *.log
 *.wav
+*.mp3
 
 # Manual checks
 elderly_assistant_sim.py
+test.py
+
 # Simulator Isolated Environment
 .sim_env/
+.sim_env_*/
+output*.txt
 
 # Tests (Not included in repo)
 tests/
