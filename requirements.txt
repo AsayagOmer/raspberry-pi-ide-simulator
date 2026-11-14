@@ -1,5 +1,6 @@
 fastapi>=0.141.1
 numpy>=2.2.6
+psutil>=7.0.0
 pygame>=2.6.1
 python-multipart>=0.0.32
 requests>=2.34.2
