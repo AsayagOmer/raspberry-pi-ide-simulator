@@ -17,6 +17,7 @@ from pi5sim import board
 # replace with a value measured on real hardware via PI5SIM_REF_SCORE.
 PI5_REF_SCORE = 8.0e6
 PERIOD = 0.05  # duty-cycle period in seconds
+TREE_REFRESH = 1.0  # seconds between process-tree rescans
 RSS_WARN = board.MEM_TOTAL_KB * 1024
 
 
@@ -60,47 +61,56 @@ class Pacer:
         except psutil.Error:
             return []
 
-    def _each(self, method, *args):
-        for p in self._tree():
+    @staticmethod
+    def _each(tree, method, *args):
+        for p in tree:
             try:
                 getattr(p, method)(*args)
             except (psutil.Error, AttributeError):
                 pass  # exited, or cpu_affinity unavailable (macOS)
+
+    def _refresh(self, cpus, pinned):
+        """Rescan the process tree (pin new processes to 4 cores); returns (tree, total RSS)."""
+        tree = self._tree()
+        for p in tree:
+            if p.pid not in pinned:
+                pinned.add(p.pid)
+                self._each([p], "cpu_affinity", cpus)
+        rss = 0
+        for p in tree:
+            try:
+                rss += p.memory_info().rss
+            except psutil.Error:
+                pass
+        return tree, rss
 
     def _loop(self):
         warned = False
         run, pause = PERIOD * self.ratio, PERIOD * (1 - self.ratio)
         cpus = list(range(min(board.CORES, os.cpu_count() or 1)))
         pinned = set()
+        next_scan, interval = 0.0, PERIOD
         try:
             while not self._stop.is_set() and self.proc.is_running():
-                tree = self._tree()
-                for p in tree:
-                    if p.pid not in pinned:
-                        pinned.add(p.pid)
-                        try:
-                            p.cpu_affinity(cpus)
-                        except (psutil.Error, AttributeError):
-                            pass
-                rss = 0
-                for p in tree:
-                    try:
-                        rss += p.memory_info().rss
-                    except psutil.Error:
-                        pass
-                if not warned and rss > RSS_WARN:
-                    warned = True
-                    if self.on_warning:
-                        self.on_warning("Out of memory: process exceeds the Pi 5's 16 GB\n")
+                # Scanning the tree costs ~5 ms on Windows. Scan often at start (the venv launcher
+                # spawns the real interpreter a moment later), then back off to once a second.
+                if time.monotonic() >= next_scan:
+                    tree, rss = self._refresh(cpus, pinned)
+                    next_scan = time.monotonic() + interval
+                    interval = min(TREE_REFRESH, interval * 2)
+                    if not warned and rss > RSS_WARN:
+                        warned = True
+                        if self.on_warning:
+                            self.on_warning("Out of memory: process exceeds the Pi 5's 16 GB\n")
                 if pause <= 0:
                     self._stop.wait(0.5)
                     continue
                 self._stop.wait(run)
-                self._each("suspend")
+                self._each(tree, "suspend")
                 try:
                     self._stop.wait(pause)
                 finally:
-                    self._each("resume")
+                    self._each(tree, "resume")
         except psutil.Error:
             pass
 
