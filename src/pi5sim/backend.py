@@ -13,7 +13,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 from core.code_executor import CodeExecutor
 from core.event_bus import EventBus
 from core.hardware_api import HardwareAPI
-from pi5sim import board, perf
+from pi5sim import board, camera, perf
 from pi5sim.shell import Shell
 
 
@@ -56,6 +56,7 @@ class Backend:
         self.extra_files = {}
         self.extra_commands = {}
         self.shell = Shell(self, home)
+        camera.attach(self)
         EventBus.subscribe("UPDATE_CANVAS_TEXT", lambda item, text, color: self.send(t="screen", text=text, color=color))
         EventBus.subscribe("LOG_CONSOLE", lambda text: self.write(text + "\r\n"))
 
@@ -127,6 +128,7 @@ class Backend:
             if self.pacer:
                 self.pacer.stop()
             self.pacer = self.script_pid = None
+            self.camera.streaming = 0  # a script may exit without picam2.stop()
             self.send_state()
             on_exit(rc)
 

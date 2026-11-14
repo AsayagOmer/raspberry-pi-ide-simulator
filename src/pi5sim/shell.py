@@ -3,6 +3,7 @@ import datetime
 import os
 import shlex
 import shutil
+import threading
 import time
 
 import psutil
@@ -22,6 +23,7 @@ class Shell:
         self.line = ""
         self.history, self.hpos = [], 0
         self.running = False
+        self.busy, self.cancel = False, threading.Event()
         self.commands = {
             "help": self.c_help, "ls": self.c_ls, "cd": self.c_cd, "pwd": self.c_pwd, "cat": self.c_cat,
             "echo": self.c_echo, "clear": self.c_clear, "mkdir": self.c_mkdir, "rm": self.c_rm,
@@ -53,10 +55,30 @@ class Shell:
                 return os.path.abspath(os.path.join(self.home, p[len(pre):]))
         return os.path.abspath(os.path.join(self.cwd, p))
 
+    def run_async(self, job):
+        """Run job(cancel_event) off the input thread; the prompt returns when it finishes."""
+        self.cancel, self.busy = threading.Event(), True
+
+        def go():
+            try:
+                job(self.cancel)
+            except Exception as e:
+                self.out(f"ERROR: {e}\n")
+            finally:
+                self.busy = False
+                self.prompt()
+        threading.Thread(target=go, daemon=True).start()
+        return "async"
+
     def feed(self, data: str):
         """Handle raw keystrokes from the terminal."""
         if self.running:
             return self._feed_script(data)
+        if self.busy:
+            if "\x03" in data:
+                self.out("^C\r\n")
+                self.cancel.set()
+            return
         i = 0
         while i < len(data):
             ch = data[i]
