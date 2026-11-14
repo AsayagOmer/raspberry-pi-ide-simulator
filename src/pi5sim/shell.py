@@ -104,6 +104,8 @@ class Shell:
                     self.history.append(line)
                 self.hpos = len(self.history)
                 self.execute(line)
+                if self.running:  # rest of a multi-line paste is input for the script just started
+                    return self._feed_script(data[i + 1:])
             elif ch in ("\x7f", "\b"):
                 if self.line:
                     self.line = self.line[:-1]

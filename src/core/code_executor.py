@@ -109,6 +109,8 @@ class CodeExecutor:
         self.active_procs = []
         self.active_apis = []
         self._stdin_lock = threading.Lock()
+        self._script_proc = None
+        self._pending_input = []
 
     def stop(self):
         """Stop all running user scripts, emulators, and audio streams."""
@@ -131,12 +133,17 @@ class CodeExecutor:
                 pass
         self.active_procs.clear()
         self.active_apis.clear()
+        with self._stdin_lock:
+            self._script_proc = None
+            self._pending_input.clear()
 
     def send_input(self, text: str):
-        """Forward keyboard input to the running user script (for input())."""
-        proc = self.active_procs[-1] if self.active_procs else None
-        if proc and proc.poll() is None and proc.stdin:
-            with self._stdin_lock:
+        """Forward keyboard input to the user script (for input()); queued until the script has started."""
+        with self._stdin_lock:
+            proc = self._script_proc
+            if proc is None:
+                self._pending_input.append(text)
+            elif proc.poll() is None and proc.stdin:
                 proc.stdin.write(text.encode("utf-8"))
                 proc.stdin.flush()
 
@@ -246,6 +253,12 @@ class CodeExecutor:
                                     stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     bufsize=0)
             self.active_procs.append(proc)
+            with self._stdin_lock:
+                self._script_proc = proc
+                for text in self._pending_input:  # typed or pasted before the process existed
+                    proc.stdin.write(text.encode("utf-8"))
+                proc.stdin.flush()
+                self._pending_input.clear()
             if on_start:
                 on_start(proc)
 
