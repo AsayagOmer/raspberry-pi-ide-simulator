@@ -20,8 +20,19 @@
   ],
   "contributes": {
     "commands": [
-      { "command": "piSim.openTerminal", "title": "Open Raspberry Pi 5 Terminal", "category": "Pi Sim" }
+      { "command": "piSim.openTerminal", "title": "Open Raspberry Pi 5 Terminal", "category": "Pi Sim" },
+      { "command": "piSim.openBoard", "title": "Show Raspberry Pi 5 Board", "category": "Pi Sim" }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "piSim", "title": "Raspberry Pi 5", "icon": "media/pi.svg" }
+      ]
+    },
+    "views": {
+      "piSim": [
+        { "type": "webview", "id": "piSim.board", "name": "Board" }
+      ]
+    },
     "terminal": {
       "profiles": [
         { "id": "piSim.terminal", "title": "Raspberry Pi 5" }

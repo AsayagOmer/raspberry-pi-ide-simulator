@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{csp}} data:; style-src {{csp}}; script-src 'nonce-{{nonce}}';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{css}}">
+  <title>Raspberry Pi 5</title>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Raspberry Pi 5 <span class="accent">16 GB</span></h1>
+      <p class="sub">BCM2712 · 4× Cortex-A76 @ 2.4 GHz · LPDDR4X-4267</p>
+    </div>
+    <button id="open-terminal" title="Open the Raspberry Pi 5 terminal">Terminal</button>
+  </header>
+
+  <section class="palette" aria-label="Peripherals">
+    <p class="hint">Drag a peripheral onto a highlighted port.</p>
+    <div id="palette"></div>
+  </section>
+
+  <svg id="board" viewBox="0 0 560 470" role="img" aria-label="Raspberry Pi 5 board"></svg>
+  <p id="status" class="status" role="status"></p>
+
+  <section id="attached" aria-label="Attached peripherals"></section>
+
+  <section id="pirate" class="panel" hidden>
+    <h2>Pirate Audio</h2>
+    <div class="pirate">
+      <div class="pa-buttons"><button data-btn="A">A</button><button data-btn="B">B</button></div>
+      <div id="pa-screen" class="pa-screen"></div>
+      <div class="pa-buttons"><button data-btn="X">X</button><button data-btn="Y">Y</button></div>
+    </div>
+  </section>
+
+  <section id="camera" class="panel" hidden>
+    <h2>Arducam IMX519 preview</h2>
+    <img id="cam-img" alt="Camera preview" hidden>
+    <p id="cam-info" class="sub">Idle. Run rpicam-hello or start a picamera2 script.</p>
+  </section>
+
+  <script nonce="{{nonce}}" src="{{js}}"></script>
+</body>
+</html>

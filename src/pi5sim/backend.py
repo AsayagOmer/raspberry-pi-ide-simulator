@@ -1,7 +1,9 @@
 """Headless Pi 5 backend: talks JSON lines to the VS Code extension over stdin/stdout.
 
 In:  {"t":"stdin","data":str} {"t":"wiring","links":{peripheral: port|null}} {"t":"button","btn":"A","down":bool}
+     {"t":"hello"} (asks for a state message)
 Out: {"t":"term","data":str} {"t":"state",...} {"t":"screen","text":str,"color":str}
+     {"t":"frame","jpg":base64,"source":str,"lens":float,"af":int}
 """
 import json
 import os
@@ -71,7 +73,8 @@ class Backend:
 
     def send_state(self):
         self.send(t="state", links=self.links, gpio={str(k): v for k, v in self.gpio.items()},
-                  running=self.script_pid is not None, model=board.MODEL)
+                  running=self.script_pid is not None, model=board.MODEL,
+                  peripherals=board.PERIPHERALS, j8=board.J8)
 
     def handle(self, msg: dict):
         t = msg.get("t")
@@ -86,6 +89,8 @@ class Backend:
             self.send_state()
         elif t == "button":
             self.app.button_states[msg["btn"]] = bool(msg["down"])
+        elif t == "hello":
+            self.send_state()
 
     def serve(self, stream=None):
         self.write(f"{board.MODEL} simulator - {board.SPECS['SoC']}, 16 GB\r\n"

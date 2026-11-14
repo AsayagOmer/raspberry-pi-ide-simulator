@@ -39,6 +39,8 @@ class Backend {
     this.proc = null;
   }
 
+  get running() { return !!this.proc; }
+
   start() {
     if (this.proc) return;
     const src = pythonSrcDir(this.context);
@@ -51,6 +53,7 @@ class Backend {
     };
     const proc = cp.spawn(pythonPath(), ['-m', 'pi5sim', workspaceHome()], { cwd: path.dirname(src), env });
     this.proc = proc;
+    this.emit({ t: 'started' });
     let buf = '';
     proc.stdout.setEncoding('utf8');
     proc.stdout.on('data', (chunk) => {
@@ -101,7 +104,8 @@ function createPty(backend) {
         if (msg.t === 'term') writeEmitter.fire(msg.data);
         if (msg.t === 'exit') writeEmitter.fire(`\r\n[simulator exited with code ${msg.code}]\r\n`);
       });
-      backend.start();
+      if (backend.running) backend.send({ t: 'stdin', data: '\x0c' }); // already started by the board: redraw prompt
+      else backend.start();
     },
     handleInput(data) { backend.send({ t: 'stdin', data }); },
     close() {
@@ -127,8 +131,40 @@ function activate(context) {
       provideTerminalProfile: () => new vscode.TerminalProfile(terminalOptions()),
     }),
     vscode.window.onDidCloseTerminal((t) => { if (t === terminal) terminal = undefined; }),
+    vscode.window.registerWebviewViewProvider('piSim.board', new BoardViewProvider(context, backend, openTerminal), {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
+    vscode.commands.registerCommand('piSim.openBoard', () => vscode.commands.executeCommand('piSim.board.focus')),
   );
   return { backend, openTerminal };
+}
+
+/** Side-panel board view: forwards backend state to the webview and wiring/buttons back. */
+class BoardViewProvider {
+  constructor(context, backend, openTerminal) {
+    this.context = context;
+    this.backend = backend;
+    this.openTerminal = openTerminal;
+  }
+
+  resolveWebviewView(view) {
+    const media = vscode.Uri.joinPath(this.context.extensionUri, 'media');
+    const webview = view.webview;
+    webview.options = { enableScripts: true, localResourceRoots: [media] };
+    const nonce = require('crypto').randomBytes(16).toString('hex');
+    webview.html = fs.readFileSync(path.join(media.fsPath, 'board.html'), 'utf8')
+      .replace(/{{csp}}/g, webview.cspSource)
+      .replace(/{{nonce}}/g, nonce)
+      .replace('{{css}}', webview.asWebviewUri(vscode.Uri.joinPath(media, 'board.css')).toString())
+      .replace('{{js}}', webview.asWebviewUri(vscode.Uri.joinPath(media, 'board.js')).toString());
+    const sub = this.backend.on((msg) => { if (msg.t !== 'term') webview.postMessage(msg); });
+    webview.onDidReceiveMessage((msg) => {
+      if (msg.t === 'openTerminal') this.openTerminal();
+      else this.backend.send(msg);
+    });
+    view.onDidDispose(() => sub.dispose());
+    if (!this.backend.running) this.openTerminal(); // the shell is where code runs; start both together
+  }
 }
 
 function deactivate() {}

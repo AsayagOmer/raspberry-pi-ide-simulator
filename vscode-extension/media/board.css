@@ -1,0 +1,86 @@
+:root {
+  --pcb: #1f7a45;
+  --pcb-edge: #165c33;
+  --metal: #c9ced6;
+  --chip: #16181d;
+  --accent: #e8344e;
+  --ok: #2fbf71;
+  --bad: #e8344e;
+  --target: #ffd84d;
+}
+
+body {
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  padding: 8px 12px 24px;
+  margin: 0;
+}
+
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+h1 { font-size: 1.25em; margin: 4px 0 2px; }
+h2 { font-size: 1em; margin: 0 0 8px; }
+.accent { color: var(--accent); }
+.sub { color: var(--vscode-descriptionForeground); margin: 0; font-size: .9em; }
+.hint { color: var(--vscode-descriptionForeground); margin: 10px 0 6px; font-size: .9em; }
+
+button {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font: inherit;
+}
+button:hover { background: var(--vscode-button-hoverBackground); }
+button:focus-visible, .card:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+
+#palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.card {
+  border: 1px solid var(--vscode-panel-border, #444);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: grab;
+  user-select: none;
+  background: var(--vscode-editor-background);
+}
+.card[aria-disabled="true"] { opacity: .45; cursor: default; }
+.card.selected { border-color: var(--target); }
+
+#board { width: 100%; height: auto; display: block; margin-top: 10px; }
+.port { fill: transparent; stroke: none; pointer-events: none; }
+.port.target { pointer-events: all; fill: rgba(255, 216, 77, .25); stroke: var(--target); stroke-width: 2; stroke-dasharray: 4 3; cursor: copy; }
+.port.hover { fill: rgba(255, 216, 77, .55); }
+.pin { stroke: #000; stroke-width: .6; }
+.pin.high { stroke: #fff; stroke-width: 1.6; }
+.label { fill: #e9f5ee; font: 8px sans-serif; pointer-events: none; }
+.chip-label { fill: #d6d9de; font: 9px monospace; pointer-events: none; }
+.led-act.on { fill: #4dff88; }
+
+.status { min-height: 1.2em; margin: 4px 0 0; font-size: .9em; }
+.status.bad { color: var(--bad); }
+.status.ok { color: var(--ok); }
+
+#attached { margin-top: 8px; }
+.attached-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--vscode-panel-border, #333); gap: 6px; }
+
+.panel { margin-top: 14px; }
+.pirate { display: flex; align-items: center; gap: 8px; }
+.pa-buttons { display: flex; flex-direction: column; gap: 20px; }
+.pa-buttons button { width: 28px; height: 28px; border-radius: 50%; padding: 0; }
+.pa-buttons button.down { background: var(--target); color: #000; }
+.pa-screen {
+  width: 160px; height: 160px;
+  background: #000;
+  border: 6px solid #222;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 14px monospace;
+  padding: 6px; box-sizing: content-box;
+  overflow: hidden; word-break: break-word;
+}
+
+#cam-img[hidden] { display: none; }
+#cam-img { width: 100%; max-width: 480px; aspect-ratio: 4 / 3; background: #000; display: block; object-fit: contain; }
