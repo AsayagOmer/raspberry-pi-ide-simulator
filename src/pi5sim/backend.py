@@ -129,7 +129,7 @@ class Backend:
 
         def started(proc):
             self.script_pid = proc.pid
-            self.pacer = perf.Pacer(proc.pid, ratio, on_warning=self.write)
+            self.pacer = perf.Pacer(proc.pid, ratio)
             self.send_state()
 
         def done(rc):
