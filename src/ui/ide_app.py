@@ -16,7 +16,7 @@ class IDEApp(tk.Tk):
         self.configure(bg="#2b2b2b")
         
         self.button_states = {'A': False, 'B': False, 'X': False, 'Y': False}
-        pygame.mixer.init()
+        pygame.mixer.init(frequency=48000)
 
         self._setup_styles()
         self._setup_ui()

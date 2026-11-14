@@ -1,0 +1,103 @@
+:root {
+  --pcb: #1f7a45;
+  --pcb-edge: #165c33;
+  --metal: #c9ced6;
+  --chip: #16181d;
+  --accent: #e8344e;
+  --ok: #2fbf71;
+  --bad: #e8344e;
+  --target: #ffd84d;
+}
+
+body {
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  padding: 8px 12px 24px;
+  margin: 0;
+}
+
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+h1 { font-size: 1.25em; margin: 4px 0 2px; }
+h2 { font-size: 1em; margin: 0 0 8px; }
+.accent { color: var(--accent); }
+.sub { color: var(--vscode-descriptionForeground); margin: 0; font-size: .9em; }
+.hint { color: var(--vscode-descriptionForeground); margin: 10px 0 6px; font-size: .9em; }
+
+button {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font: inherit;
+}
+button:hover { background: var(--vscode-button-hoverBackground); }
+button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+
+.add { position: relative; }
+.add .hint { display: block; }
+#search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  font: inherit;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border, #555));
+  border-radius: 3px;
+}
+#search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+#search::placeholder { color: var(--vscode-input-placeholderForeground); }
+#results {
+  position: absolute; left: 0; right: 0; z-index: 10;
+  list-style: none; margin: 2px 0 0; padding: 2px 0;
+  max-height: 260px; overflow-y: auto;
+  background: var(--vscode-quickInput-background, var(--vscode-editorWidget-background, #252526));
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, #454545));
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
+}
+#results li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 8px; cursor: pointer; }
+#results li[aria-selected="true"] {
+  background: var(--vscode-list-activeSelectionBackground, #04395e);
+  color: var(--vscode-list-activeSelectionForeground, #fff);
+}
+#results li.empty { color: var(--vscode-descriptionForeground); cursor: default; }
+.r-port { color: var(--vscode-descriptionForeground); white-space: nowrap; }
+#results li[aria-selected="true"] .r-port { color: inherit; opacity: .85; }
+
+#board { width: 100%; height: auto; display: block; margin-top: 10px; }
+.pin { stroke: #000; stroke-width: .6; }
+.pin.high { stroke: #fff; stroke-width: 1.6; }
+.label { fill: #e9f5ee; font: 8px sans-serif; pointer-events: none; }
+.chip-label { fill: #d6d9de; font: 9px monospace; pointer-events: none; }
+.led-act.on { fill: #4dff88; }
+
+.status { min-height: 1.2em; margin: 4px 0 0; font-size: .9em; }
+.status.bad { color: var(--bad); }
+.status.ok { color: var(--ok); }
+
+#attached { margin-top: 8px; }
+.attached-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--vscode-panel-border, #333); gap: 6px; }
+
+.panel { margin-top: 14px; }
+.pirate { display: flex; align-items: center; gap: 8px; }
+.pa-buttons { display: flex; flex-direction: column; gap: 20px; }
+.pa-buttons button { width: 28px; height: 28px; border-radius: 50%; padding: 0; }
+.pa-buttons button.down { background: var(--target); color: #000; }
+.pa-screen {
+  width: 160px; height: 160px;
+  background: #000;
+  border: 6px solid #222;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 14px monospace;
+  padding: 6px; box-sizing: content-box;
+  overflow: hidden; word-break: break-word;
+}
+
+#cam-img[hidden] { display: none; }
+#cam-img { width: 100%; max-width: 480px; aspect-ratio: 4 / 3; background: #000; display: block; object-fit: contain; }
