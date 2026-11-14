@@ -97,13 +97,16 @@ class Backend:
                    "Type 'help' for commands.\r\n\r\n")
         self.send_state()
         self.shell.prompt()
-        for line in stream or sys.stdin:
-            line = line.strip()
-            if line:
-                try:
-                    self.handle(json.loads(line))
-                except Exception as e:
-                    self.write(f"\r\n[backend error] {e}\r\n")
+        try:
+            for line in stream or sys.stdin:
+                line = line.strip()
+                if line:
+                    try:
+                        self.handle(json.loads(line))
+                    except Exception as e:
+                        self.write(f"\r\n[backend error] {e}\r\n")
+        finally:
+            self.stop_script()  # stdin closed (terminal closed): don't leave the user's script running
 
     # ---------- scripts ----------
     def used_kb(self) -> int:

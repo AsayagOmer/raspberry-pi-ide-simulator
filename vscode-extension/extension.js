@@ -88,8 +88,13 @@ class Backend {
   }
 
   stop() {
-    if (this.proc) this.proc.kill();
+    const proc = this.proc;
     this.proc = null;
+    if (!proc) return;
+    // Closing stdin lets the backend stop the user's script itself; kill only if it hangs.
+    proc.stdin.end();
+    const timer = setTimeout(() => proc.kill(), 2000);
+    proc.on('exit', () => clearTimeout(timer));
   }
 }
 
