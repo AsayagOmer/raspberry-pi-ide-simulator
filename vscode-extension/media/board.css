@@ -35,25 +35,42 @@ button {
   font: inherit;
 }
 button:hover { background: var(--vscode-button-hoverBackground); }
-button:focus-visible, .card:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
 button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
 
-#palette { display: flex; flex-wrap: wrap; gap: 6px; }
-.card {
-  border: 1px solid var(--vscode-panel-border, #444);
-  border-radius: 4px;
-  padding: 4px 8px;
-  cursor: grab;
-  user-select: none;
-  background: var(--vscode-editor-background);
+.add { position: relative; }
+.add .hint { display: block; }
+#search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  font: inherit;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border, #555));
+  border-radius: 3px;
 }
-.card[aria-disabled="true"] { opacity: .45; cursor: default; }
-.card.selected { border-color: var(--target); }
+#search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+#search::placeholder { color: var(--vscode-input-placeholderForeground); }
+#results {
+  position: absolute; left: 0; right: 0; z-index: 10;
+  list-style: none; margin: 2px 0 0; padding: 2px 0;
+  max-height: 260px; overflow-y: auto;
+  background: var(--vscode-quickInput-background, var(--vscode-editorWidget-background, #252526));
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, #454545));
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
+}
+#results li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 8px; cursor: pointer; }
+#results li[aria-selected="true"] {
+  background: var(--vscode-list-activeSelectionBackground, #04395e);
+  color: var(--vscode-list-activeSelectionForeground, #fff);
+}
+#results li.empty { color: var(--vscode-descriptionForeground); cursor: default; }
+.r-port { color: var(--vscode-descriptionForeground); white-space: nowrap; }
+#results li[aria-selected="true"] .r-port { color: inherit; opacity: .85; }
 
 #board { width: 100%; height: auto; display: block; margin-top: 10px; }
-.port { fill: transparent; stroke: none; pointer-events: none; }
-.port.target { pointer-events: all; fill: rgba(255, 216, 77, .25); stroke: var(--target); stroke-width: 2; stroke-dasharray: 4 3; cursor: copy; }
-.port.hover { fill: rgba(255, 216, 77, .55); }
 .pin { stroke: #000; stroke-width: .6; }
 .pin.high { stroke: #fff; stroke-width: 1.6; }
 .label { fill: #e9f5ee; font: 8px sans-serif; pointer-events: none; }

@@ -16,9 +16,12 @@
     <button id="open-terminal" title="Open the Raspberry Pi 5 terminal">Terminal</button>
   </header>
 
-  <section class="palette" aria-label="Peripherals">
-    <p class="hint">Drag a peripheral onto a highlighted port.</p>
-    <div id="palette"></div>
+  <section class="add" aria-label="Add a component">
+    <label for="search" class="hint">Add a component</label>
+    <input id="search" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search: camera, speaker, mic…"
+           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="results">
+    <ul id="results" role="listbox" aria-label="Components and free ports" hidden></ul>
   </section>
 
   <svg id="board" viewBox="0 0 560 470" role="img" aria-label="Raspberry Pi 5 board"></svg>

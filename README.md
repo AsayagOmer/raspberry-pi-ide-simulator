@@ -60,7 +60,7 @@ The application window opens with two panes:
 - **Terminal:** run **Pi Sim: Open Raspberry Pi 5 Terminal**, or pick **Raspberry Pi 5** from the terminal **+** menu. You get a `pi@raspberrypi:~ $` shell whose home folder is your workspace.
   - Run code with `python3 app.py` (`input()` works) and install packages with `pip install`.
   - Inspect the board with `vcgencmd measure_temp`, `pinout`, `pinctrl`, `cat /proc/cpuinfo`, `free -h` and `uname -a`.
-- **Board panel:** the Raspberry Pi 5 icon in the activity bar opens the board. Drag the Pirate Audio HAT, a USB speaker or the **Arducam IMX519 16MP autofocus** camera onto a matching port. The panel shows the Pirate Audio screen and buttons, the PWR/ACT LEDs, GPIO levels and a live camera preview.
+- **Board panel:** the Raspberry Pi 5 icon in the activity bar opens the board. Add the Pirate Audio HAT, a USB speaker or the **Arducam IMX519 16MP autofocus** camera from the **Add a component** search bar: type a name (e.g. `camera`, `speaker usb 3`) and pick a result. Each result is one component on one free port. The panel shows the Pirate Audio screen and buttons, the PWR/ACT LEDs, GPIO levels and a live camera preview.
 - **Camera:** after you plug the IMX519 into CAM/DISP 0 or 1, the `rpicam-hello`, `rpicam-still` and `rpicam-vid` commands work, and scripts can use `picamera2` and `libcamera.controls`.
   - Images come from your webcam, or a test pattern when `piSim.useWebcam` is off.
   - The sensor modes run from 4656×3496 @ 9 fps to 1280×720 @ 120 fps.

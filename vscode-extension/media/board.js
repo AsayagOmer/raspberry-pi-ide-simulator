@@ -5,13 +5,14 @@
   const svg = document.getElementById('board');
   const statusEl = document.getElementById('status');
 
-  // Port hotspots in board coordinates (viewBox 560x470, board at 20,20 520x340).
+  // Port positions in board coordinates (viewBox 560x470, board at 20,20 520x340).
+  // `name` disambiguates ports that share a printed label in the search results.
   const PORTS = {
     gpio_header: { x: 58, y: 26, w: 306, h: 34, label: 'GPIO J8' },
-    usb2_0: { x: 470, y: 40, w: 78, h: 40, label: 'USB 2.0' },
-    usb2_1: { x: 470, y: 82, w: 78, h: 40, label: 'USB 2.0' },
-    usb3_0: { x: 470, y: 132, w: 78, h: 40, label: 'USB 3.0' },
-    usb3_1: { x: 470, y: 174, w: 78, h: 40, label: 'USB 3.0' },
+    usb2_0: { x: 470, y: 40, w: 78, h: 40, label: 'USB 2.0', name: 'USB 2.0 (top)' },
+    usb2_1: { x: 470, y: 82, w: 78, h: 40, label: 'USB 2.0', name: 'USB 2.0 (bottom)' },
+    usb3_0: { x: 470, y: 132, w: 78, h: 40, label: 'USB 3.0', name: 'USB 3.0 (top)' },
+    usb3_1: { x: 470, y: 174, w: 78, h: 40, label: 'USB 3.0', name: 'USB 3.0 (bottom)' },
     eth: { x: 462, y: 232, w: 86, h: 88, label: 'RJ45' },
     cam1: { x: 322, y: 268, w: 16, h: 86, label: 'CAM/DISP 1' },
     cam0: { x: 352, y: 268, w: 16, h: 86, label: 'CAM/DISP 0' },
@@ -27,7 +28,13 @@
 
   let state = { links: {}, gpio: {}, running: false, peripherals: {}, j8: {} };
   let local = (vscode.getState() || {}).links || {};
-  let dragging = null;
+  // Extra words each component can be found by.
+  const KEYWORDS = {
+    pirate_audio: 'mic microphone audio hat screen display buttons pimoroni',
+    usb_speaker: 'speaker sound audio usb output',
+    imx519: 'camera cam arducam imx519 16mp autofocus csi mipi picamera',
+  };
+  const portName = (port) => PORTS[port].name || PORTS[port].label;
 
   const el = (tag, attrs, parent) => {
     const e = document.createElementNS(NS, tag);
@@ -97,16 +104,6 @@
       title.textContent = `Pin ${n} · ${name}${fn && fn !== 'power' && fn !== 'ground' ? ' (' + fn + ')' : ''}${gpio ? ' · ' + (gpio.mode === 'op' ? 'output ' : 'input ') + (gpio.level ? 'high' : 'low') : ''}`;
     }
     drawAttached();
-    // Port hotspots on top
-    for (const [id, p] of Object.entries(PORTS)) {
-      const r = el('rect', { x: p.x - 3, y: p.y - 3, width: p.w + 6, height: p.h + 6, rx: 4, class: 'port', 'data-port': id }, svg);
-      el('title', {}, r).textContent = p.label;
-      r.addEventListener('dragover', (e) => { if (canPlug(dragging, id)) { e.preventDefault(); r.classList.add('hover'); } });
-      r.addEventListener('dragleave', () => r.classList.remove('hover'));
-      r.addEventListener('drop', (e) => { e.preventDefault(); plug(dragging, id); });
-      r.addEventListener('click', () => { if (dragging) plug(dragging, id); });
-    }
-    highlight();
   }
 
   function drawAttached() {
@@ -135,23 +132,9 @@
 
   const canPlug = (periph, port) => periph && (state.peripherals[periph] || [null, []])[1].includes(port) && !Object.entries(state.links).some(([k, v]) => v === port && k !== periph);
 
-  function highlight() {
-    svg.querySelectorAll('.port').forEach((r) => {
-      r.classList.toggle('target', canPlug(dragging, r.dataset.port));
-      r.classList.remove('hover');
-    });
-    document.querySelectorAll('.card').forEach((c) => c.classList.toggle('selected', c.dataset.id === dragging));
-  }
-
   function plug(periph, port) {
-    if (!canPlug(periph, port)) {
-      setStatus(`${state.peripherals[periph][0]} does not fit ${PORTS[port].label}.`, 'bad');
-    } else {
-      sendWiring({ ...local, [periph]: port });
-      setStatus(`${state.peripherals[periph][0]} connected to ${PORTS[port].label}.`, 'ok');
-    }
-    dragging = null;
-    highlight();
+    sendWiring({ ...local, [periph]: port });
+    setStatus(`${state.peripherals[periph][0]} connected to ${portName(port)}.`, 'ok');
   }
 
   function sendWiring(links) {
@@ -160,28 +143,82 @@
     vscode.postMessage({ t: 'wiring', links });
   }
 
-  function renderPalette() {
-    const pal = document.getElementById('palette');
-    pal.textContent = '';
-    for (const [id, [name]] of Object.entries(state.peripherals)) {
-      const c = document.createElement('div');
-      c.className = 'card';
-      c.textContent = name;
-      c.dataset.id = id;
-      c.tabIndex = 0;
-      c.setAttribute('role', 'button');
-      const used = !!state.links[id];
-      c.setAttribute('aria-disabled', String(used));
-      c.draggable = !used;
-      c.title = used ? 'Already connected' : 'Drag onto a port, or click then click a port';
-      c.addEventListener('dragstart', (e) => { dragging = id; e.dataTransfer.setData('text/plain', id); highlight(); });
-      c.addEventListener('dragend', () => { dragging = null; highlight(); });
-      const select = () => { if (!used) { dragging = dragging === id ? null : id; highlight(); } };
-      c.addEventListener('click', select);
-      c.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); } });
-      pal.appendChild(c);
+  // ---------- search bar: one result per (component, free compatible port) ----------
+  const search = document.getElementById('search');
+  const results = document.getElementById('results');
+  let matches = [];
+  let active = 0;
+
+  function findMatches(query) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const out = [];
+    for (const [id, [name, ports]] of Object.entries(state.peripherals)) {
+      if (state.links[id]) continue; // already connected: unplug it first
+      for (const port of ports) {
+        if (!canPlug(id, port)) continue;
+        const hay = `${name} ${KEYWORDS[id] || ''} ${portName(port)}`.toLowerCase();
+        if (words.every((w) => hay.includes(w))) out.push({ id, port, name });
+      }
     }
+    return out;
   }
+
+  function renderResults() {
+    matches = findMatches(search.value);
+    active = Math.min(active, Math.max(0, matches.length - 1));
+    results.textContent = '';
+    const open = document.activeElement === search;
+    results.hidden = !open;
+    search.setAttribute('aria-expanded', String(open));
+    if (!open) return;
+    if (!matches.length) {
+      const li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = Object.values(state.links).every(Boolean) ? 'Everything is connected.' : 'No matching component or free port.';
+      results.appendChild(li);
+      return;
+    }
+    matches.forEach((m, i) => {
+      const li = document.createElement('li');
+      li.id = `result-${i}`;
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', String(i === active));
+      li.innerHTML = '<span class="r-name"></span><span class="r-port"></span>';
+      li.firstChild.textContent = m.name;
+      li.lastChild.textContent = `→ ${portName(m.port)}`;
+      li.addEventListener('mousedown', (e) => { e.preventDefault(); choose(i); }); // before the input blurs
+      li.addEventListener('mousemove', () => { if (active !== i) { active = i; renderResults(); } });
+      results.appendChild(li);
+    });
+    search.setAttribute('aria-activedescendant', `result-${active}`);
+  }
+
+  function choose(i) {
+    const m = matches[i];
+    if (!m) return;
+    plug(m.id, m.port);
+    search.value = '';
+    active = 0;
+    search.blur();
+    renderResults();
+  }
+
+  search.addEventListener('input', () => { active = 0; renderResults(); });
+  search.addEventListener('focus', renderResults);
+  search.addEventListener('blur', renderResults);
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (matches.length) active = (active + (e.key === 'ArrowDown' ? 1 : matches.length - 1)) % matches.length;
+      renderResults();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      choose(active);
+    } else if (e.key === 'Escape') {
+      search.value = '';
+      search.blur();
+    }
+  });
 
   function renderAttached() {
     const box = document.getElementById('attached');
@@ -190,7 +227,7 @@
       if (!port) continue;
       const row = document.createElement('div');
       row.className = 'attached-row';
-      row.textContent = `${state.peripherals[id][0]} → ${PORTS[port].label}`;
+      row.textContent = `${state.peripherals[id][0]} → ${portName(port)}`;
       const b = document.createElement('button');
       b.className = 'secondary';
       b.textContent = 'Unplug';
@@ -216,7 +253,7 @@
   window.addEventListener('message', ({ data: msg }) => {
     if (msg.t === 'state') {
       state = msg;
-      renderPalette();
+      renderResults();
       renderAttached();
       draw();
     } else if (msg.t === 'started') {

@@ -60,7 +60,7 @@ Subsystems:
 **4. Raspberry Pi 5 backend (`src/pi5sim/`) + VS Code extension (`vscode-extension/`).**
 - The extension (`extension.js`, plain JS with no build step) spawns `python -m pi5sim <workspace>` with `PYTHONPATH` set to `../src`, or to `python/` in a packaged `.vsix`. It talks JSON lines over stdio; message types are documented at the top of `backend.py`.
 - **The terminal:** a Pseudoterminal that forwards raw keystrokes. `shell.py` handles line editing itself and maps `~` and `/home/pi` onto the workspace. Add a command by putting it in `Shell.commands`. A command that returns `"async"` must print the prompt itself; use `run_async`.
-- **The side panel:** a WebviewView, `media/board.*`. Port ids and geometry are hardcoded in `board.js`; port compatibility comes from `board.PERIPHERALS`.
+- **The side panel:** a WebviewView, `media/board.*`. Port ids and geometry are hardcoded in `board.js`; port compatibility comes from `board.PERIPHERALS`. Components are added from the search bar, which lists one result per (component, free compatible port); search keywords live in `KEYWORDS` in `board.js`.
 - **`backend.HeadlessApp`:** stands in for the Tk app. `HardwareAPI` finds peripherals by class name (`PirateAudio`, `USBSpeaker`) and checks `connected_to is rpi`, so the backend creates stub objects with those names.
 - **`perf.Pacer`:** paces the user process to Pi 5 speed by suspending and resuming it. It must act on the whole process tree, because on Windows the venv `python.exe` is only a launcher.
 - **`camera.attach`:** registers the `cam_*` HW_CMDs, writes the `picamera2.py`/`libcamera.py` shims, adds the `rpicam-*` commands and runs the preview stream. `PI5SIM_WEBCAM=0` forces the test pattern.
