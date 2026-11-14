@@ -53,6 +53,34 @@ The application window opens with two panes:
 - **Component Palette** – drag components onto the canvas
 - **Code Editor** – write or open Python files, then click **▶ Run Active Code**
 
+## VS Code Extension: Raspberry Pi 5 (16 GB)
+
+[`vscode-extension/`](vscode-extension/) turns VS Code into a simulated **Raspberry Pi 5 Model B 16 GB**.
+
+- **Terminal:** run **Pi Sim: Open Raspberry Pi 5 Terminal**, or pick **Raspberry Pi 5** from the terminal **+** menu. You get a `pi@raspberrypi:~ $` shell whose home folder is your workspace.
+  - Run code with `python3 app.py` (`input()` works) and install packages with `pip install`.
+  - Inspect the board with `vcgencmd measure_temp`, `pinout`, `pinctrl`, `cat /proc/cpuinfo`, `free -h` and `uname -a`.
+- **Board panel:** the Raspberry Pi 5 icon in the activity bar opens the board. Drag the Pirate Audio HAT, a USB speaker or the **Arducam IMX519 16MP autofocus** camera onto a matching port. The panel shows the Pirate Audio screen and buttons, the PWR/ACT LEDs, GPIO levels and a live camera preview.
+- **Camera:** after you plug the IMX519 into CAM/DISP 0 or 1, the `rpicam-hello`, `rpicam-still` and `rpicam-vid` commands work, and scripts can use `picamera2` and `libcamera.controls`.
+  - Images come from your webcam, or a test pattern when `piSim.useWebcam` is off.
+  - The sensor modes run from 4656×3496 @ 9 fps to 1280×720 @ 120 fps.
+  - Focus blur and autofocus are simulated.
+- **Performance:** scripts are paced to Pi 5 CPU speed and pinned to 4 cores. The default reference is an estimate. For accurate pacing, run `python -m pi5sim.perf` on a real Pi 5 and set `PI5SIM_REF_SCORE` to the score it prints.
+
+Run the extension from this checkout. It uses the repo's `.venv`:
+
+```bash
+code --extensionDevelopmentPath=vscode-extension .
+```
+
+Or build a `.vsix` and install it:
+
+```bash
+cd vscode-extension && npm run package
+```
+
+This is a simulator, not an emulator. Scripts run on the host Python with Pi 5 hardware simulated around them; Raspberry Pi OS is not booted.
+
 ## Getting Started
 
 A concise step‑by‑step tutorial is available in the [Getting‑Started guide](docs/Getting-Started.md).

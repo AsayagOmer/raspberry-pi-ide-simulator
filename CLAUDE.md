@@ -22,6 +22,11 @@ python run_emulator.py --unittest      # = pytest src/emulator/tests/ -v --tb=sh
 python -m pytest tests
 python -m pytest tests/test_components.py::TestClassName::test_name
 
+# VS Code extension (Raspberry Pi 5 shell + board panel)
+code --extensionDevelopmentPath=vscode-extension .
+cd vscode-extension && npm run package # bundles src/core + src/pi5sim into a .vsix
+python -m pytest tests/test_pi5_shell.py tests/test_imx519.py tests/test_perf.py
+
 # Docker (Windows via WSL2 + WSLg, no Docker Desktop)
 launch_isolated.bat                    # wraps run_simulator.ps1: installs docker.io in WSL, builds pi-ide-sim, runs it
 ```
@@ -34,7 +39,7 @@ Known state: `tests/test_hardware_api.py` and `tests/test_connections.py` fail t
 
 ## Architecture
 
-Three subsystems:
+Subsystems:
 
 **1. IDE (`src/ui/`, MVC on Tkinter).** `ide_app.IDEApp` is the controller gluing `hardware_workspace.HardwareWorkspace` (canvas, drag/snap of components, connections) and `code_editor.CodeEditor` (tabs, highlighting). Tkinter is not thread-safe: background work must reach widgets only via `app.after(0, ...)`.
 
@@ -42,13 +47,27 @@ Three subsystems:
 
 **3. Code execution (`src/core/`).** `HardwareAPI` (`hardware_api.py`) implements device actions (display, buttons, `play_audio` via pygame, `record_audio` via sounddevice) against connected components and publishes UI updates through `EventBus` (`event_bus.py`, simple pub/sub, e.g. `"LOG_CONSOLE"`).
 
-`CodeExecutor.run` (`code_executor.py`) — note `docs/ARCHITECTURE.md` still describes an in-thread sandbox; the real flow is out-of-process:
-- AST-scans user imports, `uv pip install --target` (fallback `pip`) missing non-stdlib packages into `.sim_env_<id(rpi)>/` at the project root (these dirs are per-run cache, safe to ignore).
-- Writes a generated `hardware.py` proxy plus `main_script.py` (`import hardware` prepended) into that dir, runs it as a subprocess with `.env` vars merged in.
-- Proxy protocol over stdio: child prints `HW_CMD:<cmd>:<arg1>|<arg2>`, parent dispatches to `HardwareAPI`, replies `True`/`False` on stdin. Adding a user-facing hardware function requires updating both the proxy string and the dispatch `if/elif` in `code_executor.py`, plus `HardwareAPI`.
-- Also spawns `run_emulator.py --test uart` alongside and streams its output as `[ARM64 Emulator]` lines.
+`CodeExecutor.run` (`code_executor.py`). `docs/ARCHITECTURE.md` still describes an in-thread sandbox, but code actually runs in a separate process. Shared by the Tk IDE and the Pi 5 backend:
+- **Dependencies:** AST-scans user imports. Packages that are neither importable on the host nor already in `.sim_env/` (project root, a gitignored cache) get installed there with `uv pip install --target`, falling back to `pip`.
+- **Running:** writes the `hardware.py` proxy (`PROXY_CODE`) plus any `extra_files` into `.sim_env/`. Then it runs either `main_script.py` (with `import hardware` prepended, Tk mode) or `script_path` directly (shell mode), with `PYTHONPATH=.sim_env` and `.env` vars merged in.
+- **Proxy protocol over stdio:**
+  - The child prints `HW_CMD:<cmd>:<arg1>|<arg2>`.
+  - The parent replies `\x01HW:<result>` on stdin. The tag lets the proxy's stdin wrapper keep `input()` working.
+  - Built-in commands live in `dispatch()`, and callers add their own with `extra_commands={name: fn(args, cwd)}`.
+  - Output is streamed unbuffered through `on_output`. By default that is line-wise `app.log_console`.
+- `spawn_emulator=True` (the Tk default) also runs `run_emulator.py --test uart` and shows its output as `[ARM64 Emulator]` lines.
 
-**4. BCM2711 emulator (`src/emulator/`, untracked/new).** Unicorn-based ARMv8-A emulator: `soc.BCM2711SoC` wires `cpu.py` (cores), `memory.py` (map, 8 GB boundary), `boot.py` (kernel/DTB/spin-table load), `throttle.py`, and MMIO `peripherals/` (`pl011` UART, `gic400`, `mailbox`, `timer`, `emmc2`, all on `base_peripheral.py`).
+**4. Raspberry Pi 5 backend (`src/pi5sim/`) + VS Code extension (`vscode-extension/`).**
+- The extension (`extension.js`, plain JS with no build step) spawns `python -m pi5sim <workspace>` with `PYTHONPATH` set to `../src`, or to `python/` in a packaged `.vsix`. It talks JSON lines over stdio; message types are documented at the top of `backend.py`.
+- **The terminal:** a Pseudoterminal that forwards raw keystrokes. `shell.py` handles line editing itself and maps `~` and `/home/pi` onto the workspace. Add a command by putting it in `Shell.commands`. A command that returns `"async"` must print the prompt itself; use `run_async`.
+- **The side panel:** a WebviewView, `media/board.*`. Port ids and geometry are hardcoded in `board.js`; port compatibility comes from `board.PERIPHERALS`.
+- **`backend.HeadlessApp`:** stands in for the Tk app. `HardwareAPI` finds peripherals by class name (`PirateAudio`, `USBSpeaker`) and checks `connected_to is rpi`, so the backend creates stub objects with those names.
+- **`perf.Pacer`:** paces the user process to Pi 5 speed by suspending and resuming it. It must act on the whole process tree, because on Windows the venv `python.exe` is only a launcher.
+- **`camera.attach`:** registers the `cam_*` HW_CMDs, writes the `picamera2.py`/`libcamera.py` shims, adds the `rpicam-*` commands and runs the preview stream. `PI5SIM_WEBCAM=0` forces the test pattern.
+- **Tests:** `tests/test_pi5_shell.py`, `test_imx519.py` and `test_perf.py`. Note that `tests/` is gitignored.
+- **Packaging:** `cd vscode-extension && npm run package`. This runs `scripts/bundle-python.js` and then vsce.
+
+**5. BCM2711 emulator (`src/emulator/`).** Unicorn-based ARMv8-A emulator: `soc.BCM2711SoC` wires `cpu.py` (cores), `memory.py` (map, 8 GB boundary), `boot.py` (kernel/DTB/spin-table load), `throttle.py`, and MMIO `peripherals/` (`pl011` UART, `gic400`, `mailbox`, `timer`, `emmc2`, all on `base_peripheral.py`).
 
 ## Other top-level files
 
