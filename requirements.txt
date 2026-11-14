@@ -6,3 +6,8 @@ requests>=2.34.2
 sounddevice>=0.5.6
 soundfile>=0.14.0
 uvicorn>=0.53.0
+
+# ARMv8-A Emulator dependencies
+unicorn>=2.1.1
+capstone>=5.0.1
+keystone-engine>=0.9.2

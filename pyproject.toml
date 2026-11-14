@@ -23,4 +23,4 @@ dependencies = [
     "uvicorn>=0.53.0",
 ]
 [project.scripts]
-raspberry-pi-ide = "run_simulator:main"
+raspberry-pi-ide = "main:main"

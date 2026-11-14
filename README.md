@@ -46,7 +46,7 @@ pip install -r requirements.txt
 ## Launching the IDE
 
 ```bash
-python professional_ide.py
+python main.py
 ```
 
 The application window opens with two panes:
