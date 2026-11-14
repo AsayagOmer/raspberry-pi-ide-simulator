@@ -1,0 +1,50 @@
+{
+  "name": "raspberry-pi-5-simulator",
+  "displayName": "Raspberry Pi 5 Simulator",
+  "description": "A simulated Raspberry Pi 5 (16 GB) in VS Code: Pi shell in the terminal, board and peripherals in a side panel, Arducam IMX519 camera.",
+  "version": "0.1.0",
+  "publisher": "asayagomer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AsayagOmer/raspberry-pi-ide-simulator.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["raspberry pi", "simulator", "gpio", "picamera2", "imx519"],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onTerminalProfile:piSim.terminal"
+  ],
+  "contributes": {
+    "commands": [
+      { "command": "piSim.openTerminal", "title": "Open Raspberry Pi 5 Terminal", "category": "Pi Sim" }
+    ],
+    "terminal": {
+      "profiles": [
+        { "id": "piSim.terminal", "title": "Raspberry Pi 5" }
+      ]
+    },
+    "configuration": {
+      "title": "Raspberry Pi 5 Simulator",
+      "properties": {
+        "piSim.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Python used to run the simulator backend. Empty: the workspace .venv, else python/python3 on PATH."
+        },
+        "piSim.useWebcam": {
+          "type": "boolean",
+          "default": true,
+          "description": "Feed the simulated IMX519 camera from the host webcam (a test pattern is used otherwise)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node scripts/bundle-python.js",
+    "package": "npx --yes @vscode/vsce package"
+  }
+}
