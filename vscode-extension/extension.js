@@ -21,8 +21,9 @@ let extensionRoot = '';
 function pythonPath() {
   const configured = vscode.workspace.getConfiguration('piSim').get('pythonPath');
   if (configured) return configured;
-  // The workspace .venv first, then the simulator repo's .venv (when run from a checkout).
-  for (const dir of [workspaceHome(), path.join(extensionRoot, '..')]) {
+  // The workspace .venv first (trusted folders only), then the simulator repo's .venv (when run from a checkout).
+  const dirs = vscode.workspace.isTrusted ? [workspaceHome(), path.join(extensionRoot, '..')] : [path.join(extensionRoot, '..')];
+  for (const dir of dirs) {
     for (const p of [path.join(dir, '.venv', 'Scripts', 'python.exe'), path.join(dir, '.venv', 'bin', 'python')]) {
       if (fs.existsSync(p)) return p;
     }

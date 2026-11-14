@@ -15,6 +15,13 @@
   "categories": ["Other"],
   "keywords": ["raspberry pi", "simulator", "gpio", "picamera2", "imx519"],
   "main": "./extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In Restricted Mode the simulator never runs the workspace's own .venv Python; it uses the simulator's Python instead.",
+      "restrictedConfigurations": ["piSim.pythonPath"]
+    }
+  },
   "activationEvents": [
     "onTerminalProfile:piSim.terminal"
   ],
