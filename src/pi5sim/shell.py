@@ -47,13 +47,21 @@ class Shell:
         return "~" if rel == "." else ("~/" + rel.replace("\\", "/") if not rel.startswith("..") else path)
 
     def resolve(self, p: str) -> str:
-        """Map Pi paths (~, /home/pi) onto the workspace folder."""
+        """Map Pi paths (~, /home/pi) onto the workspace folder; anything outside it is refused."""
+        full = os.path.abspath(os.path.join(self.cwd, p))
         if p in ("~", "/home/pi"):
-            return self.home
+            full = self.home
         for pre in ("~/", "/home/pi/"):
             if p.startswith(pre):
-                return os.path.abspath(os.path.join(self.home, p[len(pre):]))
-        return os.path.abspath(os.path.join(self.cwd, p))
+                full = os.path.abspath(os.path.join(self.home, p[len(pre):]))
+        # Without this, "/" or "~/.." would reach the host drive (e.g. rm -rf / -> C:\).
+        try:
+            inside = os.path.commonpath([os.path.normcase(full), os.path.normcase(self.home)]) == os.path.normcase(self.home)
+        except ValueError:  # different drives on Windows
+            inside = False
+        if not inside:
+            raise PermissionError(f"{p}: Permission denied")
+        return full
 
     def run_async(self, job):
         """Run job(cancel_event) off the input thread; the prompt returns when it finishes."""
