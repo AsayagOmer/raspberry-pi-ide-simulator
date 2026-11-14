@@ -1,6 +1,7 @@
 """A bash-like shell that behaves like Raspberry Pi OS on a Pi 5 (pi@raspberrypi)."""
 import datetime
 import os
+import re
 import shlex
 import shutil
 import threading
@@ -13,6 +14,13 @@ from pi5sim import board
 
 GREEN, BLUE, RESET = "\x1b[1;32m", "\x1b[1;34m", "\x1b[0m"
 BOOT_TIME = time.time()
+# CSI (ESC [ params final) or SS3 (ESC O x) key sequences, e.g. \x1b[A, \x1b[3~, \x1b[1;5C, \x1bOP
+ESCAPE_RE = re.compile(r"\x1b(\[[0-9;?]*[ -/]*[@-~]|O.)?")
+
+
+def escape_len(data: str, i: int) -> int:
+    """Length of the escape sequence starting at data[i] (a lone ESC counts as 1)."""
+    return len(ESCAPE_RE.match(data, i).group(0))
 
 
 class Shell:
@@ -90,12 +98,11 @@ class Shell:
         i = 0
         while i < len(data):
             ch = data[i]
-            if data.startswith("\x1b[A", i) or data.startswith("\x1b[B", i):
-                self._history(-1 if data[i + 2] == "A" else 1)
-                i += 3
-                continue
-            if ch == "\x1b":  # ignore other escape sequences (arrows left/right, etc.)
-                i += 3
+            if ch == "\x1b":
+                seq = escape_len(data, i)
+                if data[i:i + seq] in ("\x1b[A", "\x1b[B"):
+                    self._history(-1 if data[i + 2] == "A" else 1)
+                i += seq  # other keys (left/right, Delete, Ctrl+arrows...) are ignored
                 continue
             if ch == "\r":
                 self.out("\r\n")
@@ -133,8 +140,13 @@ class Shell:
 
     def _feed_script(self, data: str):
         """While a script runs: local echo, line editing, Enter sends the line, Ctrl+C stops it."""
-        for ch in data:
-            if ch == "\x03":
+        i = 0
+        while i < len(data):
+            ch = data[i]
+            i += 1
+            if ch == "\x1b":  # arrow/function keys: not supported by input(), drop the whole sequence
+                i += escape_len(data, i - 1) - 1
+            elif ch == "\x03":
                 self.out("^C\r\nKeyboardInterrupt\r\n")
                 self.b.stop_script()
                 self.line = ""
