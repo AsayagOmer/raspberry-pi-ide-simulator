@@ -320,8 +320,11 @@ class Shell:
             return self.out("usage: pip install <package> ...\n")
         pkgs = [x for x in a[1:] if not x.startswith("-")]
         self.out(f"Installing {' '.join(pkgs)} into the simulator environment...\n")
-        ok, err = install_packages(pkgs)
-        self.out(f"Successfully installed {' '.join(pkgs)}\n" if ok else err + "\n")
+
+        def job(cancel):  # off the input thread, so the board panel stays live during long installs
+            ok, err = install_packages(pkgs)
+            self.out(f"Successfully installed {' '.join(pkgs)}\n" if ok else err + "\n")
+        return self.run_async(job)
 
     def c_vcgencmd(self, a):
         cmd = a[0] if a else ""
