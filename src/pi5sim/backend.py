@@ -144,7 +144,7 @@ class Backend:
             code = f.read()
         self.executor.run(code, os.path.basename(path), self.rpi, script_path=path, args=args, cwd=cwd,
                           spawn_emulator=False, extra_files=self.extra_files, extra_commands=self.extra_commands,
-                          on_output=lambda s: self.write(s.replace("\r\n", "\n").replace("\n", "\r\n")),
+                          on_output=self.shell.out,
                           on_start=started, on_exit=done, api=HardwareAPI(self.app, self.rpi))
 
     def stop_script(self):
