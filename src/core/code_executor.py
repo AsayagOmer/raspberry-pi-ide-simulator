@@ -63,8 +63,12 @@ def record_audio(filepath, duration=4, fs=16000): return _send_cmd("record_audio
 '''
 
 
-def missing_packages(code: str, deps_dir: str = SIM_ENV):
-    """Third-party top-level imports in `code` that are neither in deps_dir nor importable on the host."""
+def missing_packages(code: str, deps_dir: str = SIM_ENV, local_dirs=()):
+    """Third-party top-level imports in `code` that are not in deps_dir, the script's own folders, or the host.
+
+    local_dirs: folders the script imports from (its own dir, its cwd). Their modules must never be
+    pip-installed: a PyPI package with the same name would be downloaded and its setup.py run.
+    """
     mods = set()
     try:
         for node in ast.walk(ast.parse(code)):
@@ -76,7 +80,8 @@ def missing_packages(code: str, deps_dir: str = SIM_ENV):
         return []
     out = []
     for m in sorted(mods - set(sys.stdlib_module_names) - {"hardware"}):
-        if os.path.exists(os.path.join(deps_dir, m)) or os.path.exists(os.path.join(deps_dir, f"{m}.py")):
+        if any(os.path.exists(os.path.join(d, m)) or os.path.exists(os.path.join(d, f"{m}.py"))
+               for d in (deps_dir, *local_dirs)):
             continue
         if importlib.util.find_spec(m) is not None:
             continue
@@ -186,7 +191,8 @@ class CodeExecutor:
                     f.write(src)
 
             # --- Auto-Install Isolated Dependencies ---
-            missing_pkgs = missing_packages(code, deps_dir)
+            local_dirs = [run_dir] + ([os.path.dirname(os.path.abspath(script_path))] if script_path else [])
+            missing_pkgs = missing_packages(code, deps_dir, local_dirs)
             if missing_pkgs:
                 on_output(f"Setting up isolated environment for: {', '.join(missing_pkgs)}...\n")
                 ok, err = install_packages(missing_pkgs, deps_dir)
